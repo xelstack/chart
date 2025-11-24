@@ -1,0 +1,29 @@
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+test-results/
+playwright-report/
+
+# Configuration files
+*.config.js
+*.config.ts
+eslint.config.js
+
+# Turborepo
+.turbo/
+
+# Temporary files
+.cache/
+*.tmp
+*.temp
+
+# Astro generated files
+.astro/
+**/.astro/

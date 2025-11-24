@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["@playwright/test", "node"],
+    "moduleResolution": "node"
+  },
+  "include": ["playwright.config.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+

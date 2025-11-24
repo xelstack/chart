@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>반응형 차트 - XelStack Chart</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f5f7fa;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .header {
+        max-width: 1200px;
+        margin: 0 auto 30px;
+        background: white;
+        padding: 25px 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2em;
+      }
+
+      .header p {
+        color: #666;
+        margin-bottom: 15px;
+      }
+
+      .header .back-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .chart-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .chart-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+      }
+
+      .resizable-container {
+        resize: both;
+        overflow: auto;
+        border: 2px dashed #667eea;
+        padding: 20px;
+        min-width: 300px;
+        min-height: 300px;
+        width: 100%;
+        height: 500px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+      }
+
+      .chart-wrapper {
+        width: 100%;
+        height: 100%;
+      }
+
+      .info-box {
+        padding: 15px;
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: #5568d3;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-box .label {
+        color: #666;
+        font-size: 0.85em;
+      }
+
+      .stat-box .value {
+        color: #333;
+        font-size: 1.5em;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>반응형 차트</h1>
+      <p>컨테이너 크기에 자동으로 적응하는 차트를 확인하세요.</p>
+      <a href="/demo.html" class="back-link">← 메인으로 돌아가기</a>
+    </div>
+
+    <div class="container">
+      <!-- 자동 반응형 차트 -->
+      <div class="chart-section">
+        <h2>자동 반응형 (ResizeObserver)</h2>
+        <div class="info-box">
+          <p><strong>힌트:</strong> 아래 컨테이너의 오른쪽 하단 모서리를 드래그하여 크기를 조절해보세요!</p>
+        </div>
+
+        <div class="resizable-container">
+          <div class="chart-wrapper" id="auto-responsive-chart"></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-box">
+            <div class="label">컨테이너 너비</div>
+            <div class="value" id="container-width">-</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">컨테이너 높이</div>
+            <div class="value" id="container-height">-</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">디바이스 픽셀 비율</div>
+            <div class="value" id="dpr">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 수동 크기 조절 -->
+      <div class="chart-section">
+        <h2>수동 크기 조절</h2>
+        <div class="info-box">
+          <p><strong>참고:</strong> 버튼을 클릭하여 차트 크기를 수동으로 변경할 수 있습니다.</p>
+        </div>
+
+        <div style="width: 100%; height: 500px; margin-bottom: 20px;">
+          <div id="manual-chart"></div>
+        </div>
+
+        <div class="controls">
+          <button onclick="resizeChart(800, 400)">800 × 400</button>
+          <button onclick="resizeChart(600, 400)">600 × 400</button>
+          <button onclick="resizeChart(400, 300)">400 × 300</button>
+          <button onclick="resizeChart(1000, 500)">1000 × 500</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-box">
+            <div class="label">현재 너비</div>
+            <div class="value" id="manual-width">800</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">현재 높이</div>
+            <div class="value" id="manual-height">400</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { createChart } from '@xelstack/chart-core';
+
+      // 샘플 데이터
+      const sampleData = {
+        points: Array.from({ length: 50 }, (_, i) => ({
+          x: i,
+          y: Math.sin(i * 0.2) * 30 + 50 + Math.random() * 10,
+        })),
+      };
+
+      // 자동 반응형 차트
+      const autoContainer = document.getElementById('auto-responsive-chart');
+      const autoChart = createChart(autoContainer, sampleData, {
+        type: 'line',
+        title: 'Auto Responsive Chart',
+        showGrid: true,
+        colors: ['#667eea'],
+        responsive: true, // ResizeObserver 활성화
+      });
+      autoChart.render();
+
+      // 수동 크기 조절 차트
+      const manualContainer = document.getElementById('manual-chart');
+      const manualChart = createChart(manualContainer, sampleData, {
+        type: 'line',
+        title: 'Manual Resize Chart',
+        showGrid: true,
+        colors: ['#764ba2'],
+        responsive: false, // ResizeObserver 비활성화
+        width: 800,
+        height: 400,
+      });
+      manualChart.render();
+
+      // 통계 업데이트
+      function updateAutoStats() {
+        const rect = autoContainer.getBoundingClientRect();
+        document.getElementById('container-width').textContent = Math.round(rect.width) + 'px';
+        document.getElementById('container-height').textContent = Math.round(rect.height) + 'px';
+        document.getElementById('dpr').textContent = window.devicePixelRatio.toFixed(2) + 'x';
+      }
+
+      // 수동 크기 조절
+      window.resizeChart = function(width, height) {
+        manualChart.resize(width, height);
+        document.getElementById('manual-width').textContent = width + 'px';
+        document.getElementById('manual-height').textContent = height + 'px';
+      };
+
+      // 초기 통계
+      updateAutoStats();
+
+      // ResizeObserver로 통계 업데이트
+      const resizeObserver = new ResizeObserver(() => {
+        updateAutoStats();
+      });
+      resizeObserver.observe(autoContainer);
+
+      // 전역으로 노출
+      window.charts = { auto: autoChart, manual: manualChart };
+    </script>
+  </body>
+</html>

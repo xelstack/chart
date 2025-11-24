@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XelStack Chart Library - Interactive Demos</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 50px;
+      }
+
+      .header h1 {
+        font-size: 3em;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .header p {
+        font-size: 1.3em;
+        opacity: 0.95;
+        font-weight: 300;
+      }
+
+      .header .version {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-top: 15px;
+        font-size: 0.9em;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 50px;
+      }
+
+      .feature-badge {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        font-weight: 500;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .feature-badge strong {
+        display: block;
+        font-size: 1.5em;
+        margin-bottom: 5px;
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+      }
+
+      .demo-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .demo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      }
+
+      .demo-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        position: relative;
+      }
+
+      .demo-card-header h2 {
+        font-size: 1.5em;
+        margin-bottom: 5px;
+      }
+
+      .demo-card-header .category {
+        opacity: 0.9;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .demo-card-body {
+        padding: 25px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .demo-card-body p {
+        color: #666;
+        margin-bottom: 20px;
+        flex: 1;
+      }
+
+      .demo-card-features {
+        list-style: none;
+        margin-bottom: 20px;
+      }
+
+      .demo-card-features li {
+        padding: 8px 0;
+        color: #555;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95em;
+      }
+
+      .demo-card-features li:last-child {
+        border-bottom: none;
+      }
+
+      .demo-card-features li::before {
+        content: '✓';
+        color: #667eea;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .demo-card-footer {
+        padding: 0 25px 25px;
+      }
+
+      .demo-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #667eea;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: background 0.2s;
+        text-decoration: none;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .demo-button:hover {
+        background: #5568d3;
+      }
+
+      .demo-button::after {
+        content: '→';
+        transition: transform 0.2s;
+      }
+
+      .demo-card:hover .demo-button::after {
+        transform: translateX(5px);
+      }
+
+      .info-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-top: 50px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .info-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+      }
+
+      .info-section p {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 15px;
+      }
+
+      .info-section code {
+        background: #f5f5f5;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.9em;
+        color: #667eea;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .header p {
+          font-size: 1em;
+        }
+
+        .demo-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .features {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>XelStack Chart Library</h1>
+        <p>고성능 함수형 차트 라이브러리</p>
+        <span class="version">v1.0.0 - Functional Programming Edition</span>
+      </div>
+
+      <div class="features">
+        <div class="feature-badge">
+          <strong>100%</strong>
+          <span>테스트 통과</span>
+        </div>
+        <div class="feature-badge">
+          <strong>228</strong>
+          <span>테스트 케이스</span>
+        </div>
+        <div class="feature-badge">
+          <strong>52KB</strong>
+          <span>번들 크기</span>
+        </div>
+        <div class="feature-badge">
+          <strong>FP</strong>
+          <span>함수형 패러다임</span>
+        </div>
+      </div>
+
+      <div class="demo-grid">
+        <!-- 기본 차트 타입 -->
+        <a href="/pages/basic-charts.html" class="demo-card">
+          <div class="demo-card-header">
+            <div class="category">Basic Features</div>
+            <h2>기본 차트 타입</h2>
+          </div>
+          <div class="demo-card-body">
+            <p>4가지 기본 차트 타입을 한눈에 확인할 수 있습니다.</p>
+            <ul class="demo-card-features">
+              <li>Line Chart (선 그래프)</li>
+              <li>Bar Chart (막대 그래프)</li>
+              <li>Pie Chart (원형 그래프)</li>
+              <li>Scatter Chart (산점도)</li>
+            </ul>
+          </div>
+          <div class="demo-card-footer">
+            <span class="demo-button">데모 보기</span>
+          </div>
+        </a>
+
+        <!-- 실시간 업데이트 -->
+        <a href="/pages/realtime.html" class="demo-card">
+          <div class="demo-card-header">
+            <div class="category">Real-time</div>
+            <h2>실시간 데이터</h2>
+          </div>
+          <div class="demo-card-body">
+            <p>실시간으로 업데이트되는 차트를 확인하세요.</p>
+            <ul class="demo-card-features">
+              <li>1초마다 자동 업데이트</li>
+              <li>부드러운 애니메이션</li>
+              <li>최대 포인트 제한</li>
+              <li>실시간 스크롤</li>
+            </ul>
+          </div>
+          <div class="demo-card-footer">
+            <span class="demo-button">데모 보기</span>
+          </div>
+        </a>
+
+        <!-- 대용량 데이터 -->
+        <a href="/pages/large-dataset.html" class="demo-card">
+          <div class="demo-card-header">
+            <div class="category">Performance</div>
+            <h2>대용량 데이터</h2>
+          </div>
+          <div class="demo-card-body">
+            <p>수만 개의 데이터 포인트를 효율적으로 처리합니다.</p>
+            <ul class="demo-card-features">
+              <li>10,000+ 데이터 포인트</li>
+              <li>가상화 최적화</li>
+              <li>디바이스 적응형</li>
+              <li>부드러운 스크롤</li>
+            </ul>
+          </div>
+          <div class="demo-card-footer">
+            <span class="demo-button">데모 보기</span>
+          </div>
+        </a>
+
+        <!-- 반응형 차트 -->
+        <a href="/pages/responsive.html" class="demo-card">
+          <div class="demo-card-header">
+            <div class="category">Responsive</div>
+            <h2>반응형 차트</h2>
+          </div>
+          <div class="demo-card-body">
+            <p>화면 크기에 자동으로 적응하는 차트입니다.</p>
+            <ul class="demo-card-features">
+              <li>ResizeObserver 기반</li>
+              <li>자동 크기 조정</li>
+              <li>Retina 디스플레이 지원</li>
+              <li>수동 크기 변경</li>
+            </ul>
+          </div>
+          <div class="demo-card-footer">
+            <span class="demo-button">데모 보기</span>
+          </div>
+        </a>
+
+        <!-- 인터랙티브 기능 -->
+        <a href="/pages/interactive.html" class="demo-card">
+          <div class="demo-card-header">
+            <div class="category">Interactive</div>
+            <h2>인터랙티브</h2>
+          </div>
+          <div class="demo-card-body">
+            <p>사용자와 상호작용하는 다양한 기능을 제공합니다.</p>
+            <ul class="demo-card-features">
+              <li>확대/축소 (Zoom)</li>
+              <li>패닝 (Pan)</li>
+              <li>동적 설정 변경</li>
+              <li>뷰포트 리셋</li>
+            </ul>
+          </div>
+          <div class="demo-card-footer">
+            <span class="demo-button">데모 보기</span>
+          </div>
+        </a>
+
+        <!-- 커스터마이징 -->
+        <a href="/pages/customization.html" class="demo-card">
+          <div class="demo-card-header">
+            <div class="category">Styling</div>
+            <h2>커스터마이징</h2>
+          </div>
+          <div class="demo-card-body">
+            <p>차트의 스타일과 테마를 자유롭게 변경할 수 있습니다.</p>
+            <ul class="demo-card-features">
+              <li>색상 커스터마이징</li>
+              <li>타이틀 & 그리드</li>
+              <li>레전드 설정</li>
+              <li>다크 모드</li>
+            </ul>
+          </div>
+          <div class="demo-card-footer">
+            <span class="demo-button">데모 보기</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="info-section">
+        <h2>라이브러리 특징</h2>
+        <p>
+          <strong>XelStack Chart Library</strong>는 함수형 프로그래밍 패러다임을 기반으로 개발된
+          고성능 차트 라이브러리입니다. 순수 함수와 불변성을 활용하여 예측 가능하고
+          테스트하기 쉬운 코드를 제공합니다.
+        </p>
+        <p>
+          <strong>주요 특징:</strong>
+        </p>
+        <ul style="color: #666; margin-left: 20px; line-height: 2;">
+          <li>함수형 프로그래밍 패러다임 (74.3% FP 준수율)</li>
+          <li>TypeScript로 작성된 타입 안전성</li>
+          <li>228개의 테스트 케이스 (100% 통과)</li>
+          <li>경량 번들 크기 (52KB ESM + CJS)</li>
+          <li>대용량 데이터 최적화 (10,000+ 포인트)</li>
+          <li>반응형 & Retina 디스플레이 지원</li>
+        </ul>
+        <p>
+          <strong>설치:</strong> <code>npm install @xelstack/chart-core</code>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

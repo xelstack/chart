@@ -1,13 +1,37 @@
 {
   "name": "chart",
+  "namespace": "xelstack",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "고성능 차트 라이브러리",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.20.0"
+  "packageManager": "pnpm@10.20.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
+    "@vitest/ui": "^4.0.8",
+    "eslint": "^9.39.1",
+    "jsdom": "^27.2.0",
+    "prettier": "^3.6.2",
+    "turbo": "^2.6.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3",
+    "vitest": "^4.0.8"
+  }
 }

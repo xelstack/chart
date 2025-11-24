@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>실시간 데이터 차트 - XelStack Chart</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f5f7fa;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .header {
+        max-width: 1200px;
+        margin: 0 auto 30px;
+        background: white;
+        padding: 25px 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2em;
+      }
+
+      .header p {
+        color: #666;
+        margin-bottom: 15px;
+      }
+
+      .header .back-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .chart-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .chart-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.5em;
+      }
+
+      .chart-wrapper {
+        width: 100%;
+        height: 400px;
+        margin-bottom: 25px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .control-group label {
+        color: #666;
+        font-weight: 500;
+        font-size: 0.9em;
+      }
+
+      button {
+        padding: 10px 20px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-size: 0.9em;
+      }
+
+      button:hover {
+        background: #5568d3;
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      button.secondary {
+        background: #6c757d;
+      }
+
+      button.secondary:hover {
+        background: #5a6268;
+      }
+
+      input[type='range'] {
+        width: 150px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-box .label {
+        color: #666;
+        font-size: 0.85em;
+        margin-bottom: 5px;
+      }
+
+      .stat-box .value {
+        color: #333;
+        font-size: 1.5em;
+        font-weight: 700;
+      }
+
+      .info-box {
+        padding: 15px;
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .info-box p {
+        color: #1976d2;
+        margin: 0;
+      }
+
+      .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+      }
+
+      .status-indicator.active {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-indicator.inactive {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-indicator::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .status-indicator.inactive::before {
+        animation: none;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>실시간 데이터 차트</h1>
+      <p>1초마다 자동으로 업데이트되는 실시간 차트를 확인하세요.</p>
+      <a href="/demo.html" class="back-link">← 메인으로 돌아가기</a>
+    </div>
+
+    <div class="container">
+      <div class="chart-section">
+        <h2>실시간 센서 데이터</h2>
+
+        <div class="info-box">
+          <p>
+            <strong>Realtime Mode:</strong> 최대 포인트 수를 제한하고 자동으로 스크롤되는 실시간 차트입니다.
+          </p>
+        </div>
+
+        <div class="chart-wrapper" id="realtime-chart"></div>
+
+        <div class="controls">
+          <div class="control-group">
+            <span class="status-indicator" id="status">
+              Stopped
+            </span>
+          </div>
+
+          <button id="start-btn">시작</button>
+          <button id="stop-btn" disabled>정지</button>
+          <button class="secondary" id="reset-btn">리셋</button>
+
+          <div class="control-group">
+            <label for="speed-slider">업데이트 속도:</label>
+            <input type="range" id="speed-slider" min="100" max="2000" value="1000" step="100" />
+            <span id="speed-value">1000ms</span>
+          </div>
+
+          <div class="control-group">
+            <label for="max-points">최대 포인트:</label>
+            <input type="range" id="max-points" min="10" max="100" value="50" step="10" />
+            <span id="max-points-value">50</span>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-box">
+            <div class="label">총 포인트 수</div>
+            <div class="value" id="total-points">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">현재 값</div>
+            <div class="value" id="current-value">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">최소값</div>
+            <div class="value" id="min-value">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">최대값</div>
+            <div class="value" id="max-value">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">평균값</div>
+            <div class="value" id="avg-value">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { createChart } from '@xelstack/chart-core';
+
+      // 상태 관리
+      let points = [];
+      let currentTime = 0;
+      let intervalId = null;
+      let maxPoints = 50;
+      let updateSpeed = 1000;
+
+      // 차트 생성
+      const container = document.getElementById('realtime-chart');
+      const chart = createChart(container, { points: [] }, {
+        type: 'line',
+        title: 'Real-time Sensor Data',
+        showGrid: true,
+        colors: ['#667eea'],
+        realtime: {
+          enabled: true,
+          maxPoints: maxPoints,
+        },
+      });
+      chart.render();
+
+      // UI 요소
+      const startBtn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const speedSlider = document.getElementById('speed-slider');
+      const speedValue = document.getElementById('speed-value');
+      const maxPointsSlider = document.getElementById('max-points');
+      const maxPointsValue = document.getElementById('max-points-value');
+      const statusIndicator = document.getElementById('status');
+
+      // 통계 요소
+      const totalPointsEl = document.getElementById('total-points');
+      const currentValueEl = document.getElementById('current-value');
+      const minValueEl = document.getElementById('min-value');
+      const maxValueEl = document.getElementById('max-value');
+      const avgValueEl = document.getElementById('avg-value');
+
+      // 새로운 데이터 포인트 생성
+      function generateDataPoint() {
+        const baseValue = 50;
+        const variation = 30;
+        const noise = Math.random() * variation - variation / 2;
+        const trend = Math.sin(currentTime * 0.1) * 20;
+
+        return {
+          x: currentTime,
+          y: Math.max(0, baseValue + trend + noise),
+        };
+      }
+
+      // 통계 업데이트
+      function updateStats() {
+        const values = points.map(p => p.y);
+
+        totalPointsEl.textContent = points.length;
+        currentValueEl.textContent = points.length > 0
+          ? values[values.length - 1].toFixed(1)
+          : '0';
+        minValueEl.textContent = values.length > 0
+          ? Math.min(...values).toFixed(1)
+          : '0';
+        maxValueEl.textContent = values.length > 0
+          ? Math.max(...values).toFixed(1)
+          : '0';
+        avgValueEl.textContent = values.length > 0
+          ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)
+          : '0';
+      }
+
+      // 데이터 업데이트
+      function updateData() {
+        const newPoint = generateDataPoint();
+        points.push(newPoint);
+
+        currentTime++;
+
+        chart.updateData({ points });
+        chart.render();
+        updateStats();
+      }
+
+      // 시작
+      function start() {
+        if (intervalId) return;
+
+        intervalId = setInterval(updateData, updateSpeed);
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        statusIndicator.textContent = 'Active';
+        statusIndicator.className = 'status-indicator active';
+      }
+
+      // 정지
+      function stop() {
+        if (!intervalId) return;
+
+        clearInterval(intervalId);
+        intervalId = null;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        statusIndicator.textContent = 'Stopped';
+        statusIndicator.className = 'status-indicator inactive';
+      }
+
+      // 리셋
+      function reset() {
+        stop();
+        points = [];
+        currentTime = 0;
+        chart.updateData({ points: [] });
+        chart.render();
+        updateStats();
+      }
+
+      // 이벤트 리스너
+      startBtn.addEventListener('click', start);
+      stopBtn.addEventListener('click', stop);
+      resetBtn.addEventListener('click', reset);
+
+      speedSlider.addEventListener('input', (e) => {
+        updateSpeed = parseInt(e.target.value);
+        speedValue.textContent = `${updateSpeed}ms`;
+
+        // 실행 중이면 재시작
+        if (intervalId) {
+          stop();
+          start();
+        }
+      });
+
+      maxPointsSlider.addEventListener('input', (e) => {
+        maxPoints = parseInt(e.target.value);
+        maxPointsValue.textContent = maxPoints;
+
+        chart.updateConfig({
+          realtime: {
+            enabled: true,
+            maxPoints: maxPoints,
+          },
+        });
+      });
+
+      // 초기 통계 표시
+      updateStats();
+
+      // 전역으로 노출
+      window.realtimeChart = chart;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+# Build outputs
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+test-results/
+playwright-report/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Turborepo
+.turbo/
+
+# Temporary files
+.cache/

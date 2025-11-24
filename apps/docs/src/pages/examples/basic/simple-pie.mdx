@@ -1,0 +1,123 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Simple Pie Chart
+description: 기본 원형 차트 만들기
+---
+
+import ChartExample from '../../../components/ChartExample';
+
+# Simple Pie Chart
+
+기본 원형 차트를 만드는 방법입니다.
+
+## 기본 예제
+
+<ChartExample
+  title="Simple Pie Chart"
+  description="카테고리별 비율을 원형 차트로 표시"
+  chartType="pie"
+  data={{
+    points: [
+      { x: 1, y: 30 },
+      { x: 2, y: 50 },
+      { x: 3, y: 20 }
+    ]
+  }}
+  config={{
+    width: 600,
+    height: 600,
+    colors: ['#ff6384', '#36a2eb', '#ffce56']
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 1, y: 30 },
+    { x: 2, y: 50 },
+    { x: 3, y: 20 }
+  ]
+};
+
+const config = {
+  type: 'pie',
+  title: 'Market Share',
+  width: 600,
+  height: 600,
+  colors: ['#ff6384', '#36a2eb', '#ffce56']
+};
+
+const chart = createChart(
+  document.getElementById('chart'),
+  dataset,
+  config
+);`}
+  client:load
+/>
+
+## 도넛 차트
+
+<ChartExample
+  title="Donut Chart"
+  description="중앙이 비어있는 도넛 차트"
+  chartType="pie"
+  data={{
+    points: [
+      { x: 1, y: 45 },
+      { x: 2, y: 30 },
+      { x: 3, y: 20 },
+      { x: 4, y: 5 }
+    ]
+  }}
+  config={{
+    width: 600,
+    height: 600,
+    colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33'],
+    innerRadius: 80
+  }}
+  code={`const config = {
+  type: 'pie',
+  title: 'Donut Chart',
+  innerRadius: 80,  // 내부 반지름
+  colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33']
+};`}
+  client:load
+/>
+
+## 커스텀 색상
+
+<ChartExample
+  title="Custom Colors Pie Chart"
+  description="커스텀 색상 팔레트 적용"
+  chartType="pie"
+  data={{
+    points: [
+      { x: 1, y: 25 },
+      { x: 2, y: 20 },
+      { x: 3, y: 30 },
+      { x: 4, y: 15 },
+      { x: 5, y: 10 }
+    ]
+  }}
+  config={{
+    width: 600,
+    height: 600,
+    colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8']
+  }}
+  code={`const config = {
+  type: 'pie',
+  colors: [
+    '#FF6B6B',  // 빨강
+    '#4ECDC4',  // 청록
+    '#45B7D1',  // 파랑
+    '#FFA07A',  // 주황
+    '#98D8C8'   // 민트
+  ]
+};`}
+  client:load
+/>
+
+## 다음 단계
+
+- [Simple Line Chart](/examples/basic/simple-line)
+- [Simple Bar Chart](/examples/basic/simple-bar)
+- [Simple Scatter Chart](/examples/basic/simple-scatter)

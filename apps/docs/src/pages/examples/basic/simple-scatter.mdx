@@ -1,0 +1,140 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Simple Scatter Chart
+description: 기본 산점도 만들기
+---
+
+import ChartExample from '../../../components/ChartExample';
+
+# Simple Scatter Chart
+
+기본 산점도를 만드는 방법입니다.
+
+## 기본 예제
+
+<ChartExample
+  title="Simple Scatter Chart"
+  description="데이터 포인트 간의 관계를 시각화"
+  chartType="scatter"
+  data={{
+    points: [
+      { x: 10, y: 20 },
+      { x: 15, y: 35 },
+      { x: 25, y: 30 },
+      { x: 30, y: 45 },
+      { x: 40, y: 40 },
+      { x: 50, y: 55 }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 10, y: 20 },
+    { x: 15, y: 35 },
+    { x: 25, y: 30 },
+    { x: 30, y: 45 },
+    { x: 40, y: 40 },
+    { x: 50, y: 55 }
+  ]
+};
+
+const config = {
+  type: 'scatter',
+  title: 'Scatter Plot',
+  width: 800,
+  height: 400,
+  colors: ['#3366ff'],
+  pointRadius: 5,
+  showGrid: true
+};
+
+const chart = createChart(
+  document.getElementById('chart'),
+  dataset,
+  config
+);`}
+  client:load
+/>
+
+## 다중 그룹
+
+<ChartExample
+  title="Multi-Group Scatter Chart"
+  description="여러 그룹을 색상으로 구분"
+  chartType="scatter"
+  data={{
+    points: [
+      { x: 10, y: 20, series: 'Group A' },
+      { x: 15, y: 35, series: 'Group A' },
+      { x: 25, y: 30, series: 'Group A' },
+      { x: 12, y: 25, series: 'Group B' },
+      { x: 18, y: 40, series: 'Group B' },
+      { x: 28, y: 35, series: 'Group B' }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff3366'],
+    showGrid: true
+  }}
+  code={`const dataset = {
+  points: [
+    { x: 10, y: 20, series: 'Group A' },
+    { x: 15, y: 35, series: 'Group A' },
+    { x: 25, y: 30, series: 'Group A' },
+    { x: 12, y: 25, series: 'Group B' },
+    { x: 18, y: 40, series: 'Group B' },
+    { x: 28, y: 35, series: 'Group B' }
+  ]
+};
+
+const config = {
+  type: 'scatter',
+  colors: ['#3366ff', '#ff3366'],
+  pointRadius: 6
+};`}
+  client:load
+/>
+
+## 포인트 크기 조정
+
+<ChartExample
+  title="Large Points Scatter Chart"
+  description="큰 포인트로 강조"
+  chartType="scatter"
+  data={{
+    points: [
+      { x: 10, y: 20 },
+      { x: 15, y: 35 },
+      { x: 25, y: 30 },
+      { x: 30, y: 45 },
+      { x: 40, y: 40 }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#FF6B6B'],
+    showGrid: true
+  }}
+  code={`const config = {
+  type: 'scatter',
+  pointRadius: 8,  // 포인트 크기
+  colors: ['#FF6B6B']
+};`}
+  client:load
+/>
+
+## 다음 단계
+
+- [Simple Line Chart](/examples/basic/simple-line)
+- [Simple Bar Chart](/examples/basic/simple-bar)
+- [Simple Pie Chart](/examples/basic/simple-pie)

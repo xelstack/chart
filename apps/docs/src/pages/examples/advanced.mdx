@@ -1,0 +1,495 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Advanced Examples
+description: 고급 XelStack Chart 사용 예제
+---
+
+import ChartExample from '../../components/ChartExample';
+
+# Advanced Examples (고급 예제)
+
+더 복잡하고 실전적인 차트 사용 예제를 살펴보세요.
+
+## 대용량 데이터 처리
+
+### 1,000개 데이터 포인트
+
+대량의 데이터를 효율적으로 렌더링하는 예제입니다.
+
+<ChartExample
+  title="Large Dataset - 1,000 Points"
+  description="사인 곡선 + 랜덤 노이즈"
+  chartType="line"
+  data={{
+    points: Array.from({ length: 1000 }, (_, i) => ({
+      x: i,
+      y: Math.sin(i / 50) * 100 + Math.random() * 20,
+    })),
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+// 1,000개 데이터 생성
+const dataset = {
+  points: Array.from({ length: 1000 }, (_, i) => ({
+    x: i,
+    y: Math.sin(i / 50) * 100 + Math.random() * 20,
+  })),
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  width: 800,
+  height: 400,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+// 자동 샘플링으로 최적화된 렌더링`}
+  client:load
+/>
+
+### 복잡한 다중 시리즈
+
+여러 데이터 시리즈를 동시에 표시합니다.
+
+<ChartExample
+  title="Complex Multi-Series"
+  description="5개 시리즈를 동시에 표시"
+  chartType="line"
+  data={{
+    points: [
+      ...Array.from({ length: 20 }, (_, i) => ({
+        x: i,
+        y: Math.sin(i / 5) * 50 + 100,
+        series: 'Series A',
+      })),
+      ...Array.from({ length: 20 }, (_, i) => ({
+        x: i,
+        y: Math.cos(i / 5) * 50 + 100,
+        series: 'Series B',
+      })),
+      ...Array.from({ length: 20 }, (_, i) => ({
+        x: i,
+        y: Math.sin(i / 3) * 30 + 100,
+        series: 'Series C',
+      })),
+      ...Array.from({ length: 20 }, (_, i) => ({
+        x: i,
+        y: Math.cos(i / 3) * 30 + 100,
+        series: 'Series D',
+      })),
+      ...Array.from({ length: 20 }, (_, i) => ({
+        x: i,
+        y: 100 + (i % 2 === 0 ? 20 : -20),
+        series: 'Series E',
+      })),
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    ...Array.from({ length: 20 }, (_, i) => ({
+      x: i,
+      y: Math.sin(i / 5) * 50 + 100,
+      series: 'Series A',
+    })),
+    ...Array.from({ length: 20 }, (_, i) => ({
+      x: i,
+      y: Math.cos(i / 5) * 50 + 100,
+      series: 'Series B',
+    })),
+    ...Array.from({ length: 20 }, (_, i) => ({
+      x: i,
+      y: Math.sin(i / 3) * 30 + 100,
+      series: 'Series C',
+    })),
+    ...Array.from({ length: 20 }, (_, i) => ({
+      x: i,
+      y: Math.cos(i / 3) * 30 + 100,
+      series: 'Series D',
+    })),
+    ...Array.from({ length: 20 }, (_, i) => ({
+      x: i,
+      y: 100 + (i % 2 === 0 ? 20 : -20),
+      series: 'Series E',
+    })),
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+---
+
+## 동적 데이터 업데이트
+
+### 실시간 데이터 시뮬레이션
+
+데이터가 계속 업데이트되는 실시간 차트입니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 초기 데이터
+const initialData = {
+  points: [{ x: 0, y: 50 }],
+};
+
+const chart = createChart(container, initialData, {
+  type: 'line',
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+let time = 0;
+
+// 실시간 데이터 업데이트 (500ms마다)
+const interval = setInterval(() => {
+  time++;
+
+  // 새 데이터 포인트 생성
+  const newPoint = {
+    x: time,
+    y: Math.sin(time / 10) * 50 + 50 + Math.random() * 10,
+  };
+
+  // 현재 데이터 가져오기
+  const currentPoints = chart.getData().points;
+
+  // 최근 100개 포인트만 유지
+  const updatedPoints = [...currentPoints, newPoint].slice(-100);
+
+  // 데이터 업데이트 및 재렌더링
+  chart.updateData({ points: updatedPoints });
+  chart.render();
+}, 500);
+
+// 정리 함수
+// clearInterval(interval);
+// chart.destroy();
+```
+
+### 데이터 변환 파이프라인
+
+함수형 프로그래밍 방식으로 데이터를 변환합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+import { pipe, map, filter, take } from '@xelstack/chart-core/utils';
+
+// 원본 데이터
+const rawData = [
+  { date: '2024-01', value: 100, status: 'active' },
+  { date: '2024-02', value: 150, status: 'active' },
+  { date: '2024-03', value: 120, status: 'inactive' },
+  { date: '2024-04', value: 180, status: 'active' },
+  { date: '2024-05', value: 200, status: 'active' },
+  { date: '2024-06', value: 170, status: 'inactive' },
+];
+
+// 데이터 변환 파이프라인
+const transformData = pipe(
+  // active 상태만 필터링
+  filter((item: typeof rawData[0]) => item.status === 'active'),
+
+  // 차트 형식으로 변환
+  map((item: typeof rawData[0]) => ({
+    x: item.date,
+    y: item.value,
+  })),
+
+  // 최근 5개만 선택
+  take(5)
+);
+
+const dataset = {
+  points: transformData(rawData),
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+```
+
+---
+
+## 고급 스타일링
+
+### 커스텀 색상 팔레트
+
+브랜드 컬러를 사용한 차트입니다.
+
+<ChartExample
+  title="Custom Brand Colors"
+  description="기업 브랜드 색상 팔레트"
+  chartType="bar"
+  data={{
+    points: [
+      { x: 'Q1', y: 100, series: 'Revenue' },
+      { x: 'Q2', y: 120, series: 'Revenue' },
+      { x: 'Q3', y: 140, series: 'Revenue' },
+      { x: 'Q4', y: 130, series: 'Revenue' },
+      { x: 'Q1', y: 80, series: 'Cost' },
+      { x: 'Q2', y: 90, series: 'Cost' },
+      { x: 'Q3', y: 100, series: 'Cost' },
+      { x: 'Q4', y: 95, series: 'Cost' },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#0066cc', '#ff3333'], // 커스텀 브랜드 컬러
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+// 브랜드 컬러 정의
+const brandColors = {
+  primary: '#0066cc',
+  secondary: '#ff3333',
+  accent: '#00cc66',
+};
+
+const dataset = {
+  points: [
+    { x: 'Q1', y: 100, series: 'Revenue' },
+    { x: 'Q2', y: 120, series: 'Revenue' },
+    { x: 'Q3', y: 140, series: 'Revenue' },
+    { x: 'Q4', y: 130, series: 'Revenue' },
+    { x: 'Q1', y: 80, series: 'Cost' },
+    { x: 'Q2', y: 90, series: 'Cost' },
+    { x: 'Q3', y: 100, series: 'Cost' },
+    { x: 'Q4', y: 95, series: 'Cost' },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'bar',
+  colors: [brandColors.primary, brandColors.secondary],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+### 다크 모드 지원
+
+다크 모드를 고려한 색상 설정입니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 테마별 색상 정의
+const themes = {
+  light: {
+    colors: ['#3366ff', '#ff6633'],
+    background: '#ffffff',
+    text: '#000000',
+  },
+  dark: {
+    colors: ['#5588ff', '#ff8855'],
+    background: '#1a1a1a',
+    text: '#ffffff',
+  },
+};
+
+// 현재 테마 감지
+const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const currentTheme = isDarkMode ? themes.dark : themes.light;
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  colors: currentTheme.colors,
+  showGrid: true,
+});
+
+// 테마 변경 감지
+window.matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', (e) => {
+    const newTheme = e.matches ? themes.dark : themes.light;
+    chart.updateConfig({ colors: newTheme.colors });
+    chart.render();
+  });
+```
+
+---
+
+## 반응형 차트
+
+### 컨테이너 크기 자동 조정
+
+화면 크기에 맞춰 자동으로 크기가 조정됩니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const container = document.getElementById('chart')!;
+
+// 초기 크기 설정
+const chart = createChart(container, dataset, {
+  type: 'line',
+  width: container.clientWidth,
+  height: container.clientHeight,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+// ResizeObserver로 크기 변화 감지
+const resizeObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect;
+
+    // 차트 크기 업데이트
+    chart.updateConfig({
+      width: Math.max(width, 300),  // 최소 300px
+      height: Math.max(height, 200), // 최소 200px
+    });
+
+    chart.render();
+  }
+});
+
+resizeObserver.observe(container);
+
+// 정리
+// resizeObserver.disconnect();
+```
+
+### 종횡비 유지
+
+특정 비율을 유지하면서 반응형으로 동작합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const container = document.getElementById('chart')!;
+const aspectRatio = 16 / 9; // 16:9 비율
+
+const updateChartSize = () => {
+  const width = container.clientWidth;
+  const height = width / aspectRatio;
+
+  chart.updateConfig({ width, height });
+  chart.render();
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  width: container.clientWidth,
+  height: container.clientWidth / aspectRatio,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+// 윈도우 리사이즈 이벤트
+window.addEventListener('resize', updateChartSize);
+
+// 정리
+// window.removeEventListener('resize', updateChartSize);
+```
+
+---
+
+## 데이터 집계 및 분석
+
+### 그룹별 집계
+
+데이터를 그룹화하고 집계합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+import { groupBy, sum, average } from '@xelstack/chart-core/utils';
+
+// 원본 거래 데이터
+const transactions = [
+  { category: 'Food', amount: 50 },
+  { category: 'Transport', amount: 30 },
+  { category: 'Food', amount: 70 },
+  { category: 'Entertainment', amount: 100 },
+  { category: 'Transport', amount: 40 },
+  { category: 'Food', amount: 60 },
+];
+
+// 카테고리별 총액 계산
+const grouped = groupBy(transactions, (t) => t.category);
+const aggregated = Object.entries(grouped).map(([category, items]) => ({
+  x: category,
+  y: sum(items.map((item) => item.amount)),
+}));
+
+const dataset = { points: aggregated };
+
+const chart = createChart(container, dataset, {
+  type: 'bar',
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+```
+
+### 이동 평균
+
+이동 평균을 계산하여 트렌드를 표시합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 이동 평균 계산 함수
+const movingAverage = (data: number[], window: number): number[] => {
+  return data.map((_, i, arr) => {
+    if (i < window - 1) return null as any;
+    const slice = arr.slice(i - window + 1, i + 1);
+    return slice.reduce((sum, val) => sum + val, 0) / window;
+  }).filter((val) => val !== null);
+};
+
+// 원본 데이터
+const rawValues = Array.from({ length: 50 }, () =>
+  Math.random() * 100
+);
+
+// 7일 이동 평균
+const ma7 = movingAverage(rawValues, 7);
+
+const dataset = {
+  points: [
+    // 원본 데이터
+    ...rawValues.map((y, x) => ({ x, y, series: 'Original' })),
+    // 이동 평균
+    ...ma7.map((y, x) => ({ x: x + 6, y, series: 'MA(7)' })),
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  colors: ['#cccccc', '#3366ff'],
+  showGrid: true,
+});
+```
+
+---
+
+## 다음 단계
+
+- [Interactive Examples](/examples/interaction) - 인터랙션 예제
+- [Integration Examples](/examples/integrations) - 프레임워크 통합
+- [Performance Examples](/examples/performance) - 성능 최적화
+- [Playground](/playground) - 직접 실험해보기

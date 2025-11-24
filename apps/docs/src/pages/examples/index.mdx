@@ -1,0 +1,422 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 예제
+description: XelStack Chart 사용 예제 모음
+---
+
+# 예제
+
+다양한 실제 사용 사례를 통해 XelStack Chart 활용법을 배워보세요.
+
+## 기본 예제
+
+### 간단한 선 차트
+
+월별 매출 데이터를 선 차트로 표시하는 기본 예제입니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: '1월', y: 100 },
+    { x: '2월', y: 150 },
+    { x: '3월', y: 120 },
+    { x: '4월', y: 180 },
+    { x: '5월', y: 200 },
+    { x: '6월', y: 170 },
+  ],
+};
+
+const chart = createChart(
+  document.getElementById('chart-container')!,
+  dataset,
+  {
+    type: 'line',
+    title: '월별 매출 추이',
+    width: 800,
+    height: 600,
+    colors: ['#3366ff'],
+    showGrid: true,
+  }
+);
+```
+
+### 막대 차트 비교
+
+여러 카테고리를 비교하는 막대 차트 예제입니다.
+
+```typescript
+const dataset = {
+  points: [
+    { x: '제품 A', y: 120 },
+    { x: '제품 B', y: 95 },
+    { x: '제품 C', y: 150 },
+    { x: '제품 D', y: 80 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'bar',
+  title: '제품별 판매량',
+  colors: ['#3366ff'],
+});
+```
+
+## 중급 예제
+
+### 다중 시리즈 차트
+
+여러 데이터 시리즈를 동시에 표시하는 예제입니다.
+
+```typescript
+const dataset = {
+  points: [
+    // 2023년 데이터
+    { x: '1월', y: 100, series: '2023' },
+    { x: '2월', y: 150, series: '2023' },
+    { x: '3월', y: 120, series: '2023' },
+    // 2024년 데이터
+    { x: '1월', y: 130, series: '2024' },
+    { x: '2월', y: 180, series: '2024' },
+    { x: '3월', y: 150, series: '2024' },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  title: '연도별 매출 비교',
+  colors: ['#3366ff', '#ff6633'],
+  showGrid: true,
+});
+```
+
+### 실시간 데이터 업데이트
+
+실시간으로 데이터가 업데이트되는 차트 예제입니다.
+
+```typescript
+const initialData = {
+  points: [{ x: 0, y: 0 }],
+};
+
+const chart = createChart(container, initialData, {
+  type: 'line',
+  title: '실시간 센서 데이터',
+});
+
+let time = 0;
+
+// 1초마다 새 데이터 추가
+setInterval(() => {
+  time++;
+  const newPoint = {
+    x: time,
+    y: Math.sin(time / 10) * 50 + Math.random() * 10,
+  };
+
+  // 마지막 100개 포인트만 유지
+  const currentPoints = chart.getData().points;
+  const updatedPoints = [...currentPoints, newPoint].slice(-100);
+
+  chart.updateData({ points: updatedPoints });
+  chart.render();
+}, 1000);
+```
+
+### 대용량 데이터 처리
+
+10,000개 이상의 데이터 포인트를 처리하는 예제입니다.
+
+```typescript
+// 10,000개 데이터 생성
+const largeDataset = {
+  points: Array.from({ length: 10000 }, (_, i) => ({
+    x: i,
+    y: Math.sin(i / 100) * 100 + Math.random() * 20,
+  })),
+};
+
+const chart = createChart(container, largeDataset, {
+  type: 'line',
+  title: '대용량 시계열 데이터',
+  width: 1200,
+  height: 600,
+});
+
+// 자동 샘플링으로 빠른 렌더링
+```
+
+## 고급 예제
+
+### React 통합
+
+React 컴포넌트로 차트를 사용하는 예제입니다.
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { createChart, type ChartConfig, type Dataset } from '@xelstack/chart-core';
+
+interface ChartProps {
+  data: Dataset;
+  config: ChartConfig;
+}
+
+export default function Chart({ data, config }: ChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // 차트 생성
+    chartRef.current = createChart(containerRef.current, data, config);
+
+    // 클린업
+    return () => {
+      chartRef.current?.destroy();
+    };
+  }, []);
+
+  // 데이터 변경 시 업데이트
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.updateData(data);
+      chartRef.current.render();
+    }
+  }, [data]);
+
+  // 설정 변경 시 업데이트
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.updateConfig(config);
+      chartRef.current.render();
+    }
+  }, [config]);
+
+  return <div ref={containerRef} className="chart-container" />;
+}
+```
+
+### Vue 3 통합
+
+Vue 3 컴포넌트로 차트를 사용하는 예제입니다.
+
+```vue
+<template>
+  <div ref="chartContainer"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { createChart, type ChartConfig, type Dataset } from '@xelstack/chart-core';
+
+interface Props {
+  data: Dataset;
+  config: ChartConfig;
+}
+
+const props = defineProps<Props>();
+const chartContainer = ref<HTMLDivElement | null>(null);
+let chartInstance: ReturnType<typeof createChart> | null = null;
+
+onMounted(() => {
+  if (chartContainer.value) {
+    chartInstance = createChart(chartContainer.value, props.data, props.config);
+  }
+});
+
+onUnmounted(() => {
+  chartInstance?.destroy();
+});
+
+watch(
+  () => props.data,
+  (newData) => {
+    if (chartInstance) {
+      chartInstance.updateData(newData);
+      chartInstance.render();
+    }
+  }
+);
+
+watch(
+  () => props.config,
+  (newConfig) => {
+    if (chartInstance) {
+      chartInstance.updateConfig(newConfig);
+      chartInstance.render();
+    }
+  }
+);
+</script>
+```
+
+### 반응형 차트
+
+화면 크기에 따라 자동으로 크기가 조정되는 차트입니다.
+
+```typescript
+const chart = createChart(container, dataset, {
+  type: 'line',
+  title: '반응형 차트',
+  width: container.clientWidth,
+  height: container.clientHeight,
+});
+
+// ResizeObserver로 컨테이너 크기 변화 감지
+const resizeObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect;
+
+    chart.updateConfig({
+      width: width,
+      height: height,
+    });
+    chart.render();
+  }
+});
+
+resizeObserver.observe(container);
+
+// 클린업
+// resizeObserver.disconnect();
+```
+
+## 실전 예제
+
+### 주식 차트
+
+실시간 주가를 표시하는 차트입니다.
+
+```typescript
+async function createStockChart() {
+  // API에서 주가 데이터 가져오기
+  const response = await fetch('https://api.example.com/stock/AAPL');
+  const stockData = await response.json();
+
+  const dataset = {
+    points: stockData.map((item: any) => ({
+      x: item.date,
+      y: item.price,
+    })),
+  };
+
+  const chart = createChart(container, dataset, {
+    type: 'line',
+    title: 'AAPL 주가',
+    colors: ['#00aa00'],
+    showGrid: true,
+  });
+
+  // 1분마다 업데이트
+  setInterval(async () => {
+    const newData = await fetch('https://api.example.com/stock/AAPL/latest');
+    const latest = await newData.json();
+
+    const currentPoints = chart.getData().points;
+    chart.updateData({
+      points: [...currentPoints, { x: latest.date, y: latest.price }],
+    });
+    chart.render();
+  }, 60000);
+}
+```
+
+### 대시보드
+
+여러 차트를 하나의 대시보드로 구성하는 예제입니다.
+
+```typescript
+// 매출 차트
+const salesChart = createChart(
+  document.getElementById('sales-chart')!,
+  salesData,
+  {
+    type: 'line',
+    title: '월별 매출',
+    width: 600,
+    height: 400,
+  }
+);
+
+// 제품별 판매량
+const productChart = createChart(
+  document.getElementById('product-chart')!,
+  productData,
+  {
+    type: 'bar',
+    title: '제품별 판매량',
+    width: 600,
+    height: 400,
+  }
+);
+
+// 시장 점유율
+const marketChart = createChart(
+  document.getElementById('market-chart')!,
+  marketData,
+  {
+    type: 'pie',
+    title: '시장 점유율',
+    width: 600,
+    height: 400,
+  }
+);
+```
+
+### CSV 데이터 import
+
+CSV 파일을 읽어서 차트를 생성하는 예제입니다.
+
+```typescript
+function parseCSV(csvText: string): Dataset {
+  const lines = csvText.split('\n');
+  const points = [];
+
+  // 헤더 스킵하고 데이터 파싱
+  for (let i = 1; i < lines.length; i++) {
+    const [x, y] = lines[i].split(',');
+    if (x && y) {
+      points.push({
+        x: isNaN(Number(x)) ? x.trim() : Number(x),
+        y: Number(y),
+      });
+    }
+  }
+
+  return { points };
+}
+
+// 파일 읽기
+const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+
+fileInput.addEventListener('change', (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    const csvText = event.target?.result as string;
+    const dataset = parseCSV(csvText);
+
+    const chart = createChart(container, dataset, {
+      type: 'line',
+      title: 'CSV 데이터',
+    });
+  };
+
+  reader.readAsText(file);
+});
+```
+
+## 플레이그라운드
+
+직접 코드를 수정하고 결과를 확인하려면 [플레이그라운드](/playground)를 방문하세요.
+
+## 다음 단계
+
+- [API Reference](/api) - 전체 API 문서
+- [차트 타입](/charts) - 각 차트 타입 상세 가이드
+- [빠른 시작](/getting-started) - 처음 시작하기

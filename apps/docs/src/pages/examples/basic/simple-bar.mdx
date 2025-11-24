@@ -1,0 +1,103 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Simple Bar Chart
+description: 기본 막대 차트 만들기
+---
+
+import ChartExample from '../../../components/ChartExample';
+
+# Simple Bar Chart
+
+기본 막대 차트를 만드는 방법입니다.
+
+## 기본 예제
+
+<ChartExample
+  title="Simple Bar Chart"
+  description="월별 판매량을 막대 차트로 표시"
+  chartType="bar"
+  data={{
+    points: [
+      { x: 1, y: 30 },
+      { x: 2, y: 45 },
+      { x: 3, y: 35 },
+      { x: 4, y: 50 },
+      { x: 5, y: 42 }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 1, y: 30 },
+    { x: 2, y: 45 },
+    { x: 3, y: 35 },
+    { x: 4, y: 50 },
+    { x: 5, y: 42 }
+  ]
+};
+
+const config = {
+  type: 'bar',
+  title: 'Monthly Sales',
+  width: 800,
+  height: 400,
+  colors: ['#3366ff'],
+  showGrid: true
+};
+
+const chart = createChart(
+  document.getElementById('chart'),
+  dataset,
+  config
+);`}
+  client:load
+/>
+
+## 다중 그룹
+
+<ChartExample
+  title="Grouped Bar Chart"
+  description="제품별 분기별 판매량 비교"
+  chartType="bar"
+  data={{
+    points: [
+      { x: 1, y: 100, series: 'Product A' },
+      { x: 2, y: 120, series: 'Product A' },
+      { x: 1, y: 90, series: 'Product B' },
+      { x: 2, y: 110, series: 'Product B' }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff3366'],
+    showGrid: true
+  }}
+  code={`const dataset = {
+  points: [
+    { x: 1, y: 100, series: 'Product A' },
+    { x: 2, y: 120, series: 'Product A' },
+    { x: 1, y: 90, series: 'Product B' },
+    { x: 2, y: 110, series: 'Product B' }
+  ]
+};
+
+const config = {
+  type: 'bar',
+  colors: ['#3366ff', '#ff3366']
+};`}
+  client:load
+/>
+
+## 다음 단계
+
+- [Simple Line Chart](/examples/basic/simple-line)
+- [Simple Pie Chart](/examples/basic/simple-pie)
+- [Simple Scatter Chart](/examples/basic/simple-scatter)

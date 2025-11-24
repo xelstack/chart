@@ -1,0 +1,138 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Pie Chart
+description: 파이 차트 상세 가이드
+---
+
+# Pie Chart (파이 차트)
+
+파이 차트는 전체 대비 각 부분의 비율을 표시하는 데 가장 효과적인 차트입니다. 구성 요소의 상대적 크기를 한눈에 파악할 수 있습니다.
+
+## 기본 사용법
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 'Chrome', y: 65 },
+    { x: 'Safari', y: 18 },
+    { x: 'Firefox', y: 10 },
+    { x: 'Edge', y: 5 },
+    { x: '기타', y: 2 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'pie',
+  title: '브라우저 시장 점유율',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'],
+});
+```
+
+## 고급 기능
+
+### 도넛 차트
+
+```typescript
+const config = {
+  type: 'pie',
+  innerRadius: 0.6, // 0-1 사이 값, 도넛 모양
+  title: '예산 분배',
+};
+```
+
+### 레이블 표시
+
+```typescript
+const config = {
+  type: 'pie',
+  showLabels: true,
+  showPercentage: true, // 백분율 표시
+};
+```
+
+## 스타일링
+
+### 슬라이스 색상
+
+```typescript
+const config = {
+  type: 'pie',
+  colors: [
+    '#FF6384',
+    '#36A2EB',
+    '#FFCE56',
+    '#4BC0C0',
+    '#9966FF',
+  ],
+};
+```
+
+### 강조 효과
+
+```typescript
+const config = {
+  type: 'pie',
+  highlightOnHover: true, // 마우스 오버 시 확대
+};
+```
+
+## 사용 사례
+
+### 시장 점유율
+
+```typescript
+const marketShareData = {
+  points: [
+    { x: 'Company A', y: 35 },
+    { x: 'Company B', y: 25 },
+    { x: 'Company C', y: 20 },
+    { x: 'Company D', y: 15 },
+    { x: '기타', y: 5 },
+  ],
+};
+
+const chart = createChart(container, marketShareData, {
+  type: 'pie',
+  title: '스마트폰 시장 점유율',
+});
+```
+
+### 예산 분배
+
+```typescript
+const budgetData = {
+  points: [
+    { x: '인건비', y: 40 },
+    { x: '마케팅', y: 25 },
+    { x: '연구개발', y: 20 },
+    { x: '운영비', y: 10 },
+    { x: '기타', y: 5 },
+  ],
+};
+
+const chart = createChart(container, budgetData, {
+  type: 'pie',
+  title: '2024년 예산 계획',
+  innerRadius: 0.5, // 도넛 차트
+});
+```
+
+## 제한사항
+
+파이 차트는 다음 경우에 적합하지 않습니다:
+
+- 10개 이상의 카테고리 (너무 복잡함)
+- 정확한 값 비교가 필요한 경우
+- 시간에 따른 변화를 표시할 때
+
+이런 경우 Bar Chart나 Line Chart를 고려하세요.
+
+## 다음 단계
+
+- [Scatter Chart](/charts/scatter) - 산점도 가이드
+- [API Reference](/api) - 전체 API 문서
+- [예제](/examples) - 더 많은 예제 보기

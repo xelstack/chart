@@ -1,0 +1,411 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Basic Examples
+description: 기본적인 XelStack Chart 사용 예제
+---
+
+import ChartExample from '../../components/ChartExample';
+
+# Basic Examples (기본 예제)
+
+가장 기본적인 차트 사용 예제를 통해 XelStack Chart의 핵심 기능을 익혀보세요.
+
+## Line Chart (선 차트)
+
+### 기본 선 차트
+
+가장 간단한 선 차트 예제입니다.
+
+<ChartExample
+  title="Simple Line Chart"
+  description="월별 매출 데이터를 선 차트로 표시"
+  chartType="line"
+  data={{
+    points: [
+      { x: 'Jan', y: 100 },
+      { x: 'Feb', y: 150 },
+      { x: 'Mar', y: 120 },
+      { x: 'Apr', y: 180 },
+      { x: 'May', y: 200 },
+      { x: 'Jun', y: 170 },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const container = document.getElementById('chart')!;
+
+const dataset = {
+  points: [
+    { x: 'Jan', y: 100 },
+    { x: 'Feb', y: 150 },
+    { x: 'Mar', y: 120 },
+    { x: 'Apr', y: 180 },
+    { x: 'May', y: 200 },
+    { x: 'Jun', y: 170 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  width: 800,
+  height: 400,
+  colors: ['#3366ff'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+### 다중 시리즈 선 차트
+
+여러 데이터 시리즈를 동시에 표시하는 선 차트입니다.
+
+<ChartExample
+  title="Multi-Series Line Chart"
+  description="연도별 매출 비교"
+  chartType="line"
+  data={{
+    points: [
+      { x: 'Jan', y: 100, series: '2023' },
+      { x: 'Feb', y: 150, series: '2023' },
+      { x: 'Mar', y: 120, series: '2023' },
+      { x: 'Apr', y: 180, series: '2023' },
+      { x: 'Jan', y: 130, series: '2024' },
+      { x: 'Feb', y: 180, series: '2024' },
+      { x: 'Mar', y: 150, series: '2024' },
+      { x: 'Apr', y: 210, series: '2024' },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff6633'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 'Jan', y: 100, series: '2023' },
+    { x: 'Feb', y: 150, series: '2023' },
+    { x: 'Mar', y: 120, series: '2023' },
+    { x: 'Apr', y: 180, series: '2023' },
+    { x: 'Jan', y: 130, series: '2024' },
+    { x: 'Feb', y: 180, series: '2024' },
+    { x: 'Mar', y: 150, series: '2024' },
+    { x: 'Apr', y: 210, series: '2024' },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  colors: ['#3366ff', '#ff6633'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+---
+
+## Bar Chart (막대 차트)
+
+### 기본 막대 차트
+
+카테고리별 값을 비교하는 막대 차트입니다.
+
+<ChartExample
+  title="Simple Bar Chart"
+  description="제품별 판매량 비교"
+  chartType="bar"
+  data={{
+    points: [
+      { x: 'Product A', y: 120 },
+      { x: 'Product B', y: 95 },
+      { x: 'Product C', y: 150 },
+      { x: 'Product D', y: 80 },
+      { x: 'Product E', y: 135 },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 'Product A', y: 120 },
+    { x: 'Product B', y: 95 },
+    { x: 'Product C', y: 150 },
+    { x: 'Product D', y: 80 },
+    { x: 'Product E', y: 135 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'bar',
+  colors: ['#3366ff'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+### 다중 그룹 막대 차트
+
+여러 그룹을 비교하는 막대 차트입니다.
+
+<ChartExample
+  title="Grouped Bar Chart"
+  description="분기별 지역별 매출"
+  chartType="bar"
+  data={{
+    points: [
+      { x: 'Q1', y: 100, series: 'East' },
+      { x: 'Q2', y: 120, series: 'East' },
+      { x: 'Q3', y: 140, series: 'East' },
+      { x: 'Q4', y: 130, series: 'East' },
+      { x: 'Q1', y: 90, series: 'West' },
+      { x: 'Q2', y: 110, series: 'West' },
+      { x: 'Q3', y: 130, series: 'West' },
+      { x: 'Q4', y: 150, series: 'West' },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff6633'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 'Q1', y: 100, series: 'East' },
+    { x: 'Q2', y: 120, series: 'East' },
+    { x: 'Q3', y: 140, series: 'East' },
+    { x: 'Q4', y: 130, series: 'East' },
+    { x: 'Q1', y: 90, series: 'West' },
+    { x: 'Q2', y: 110, series: 'West' },
+    { x: 'Q3', y: 130, series: 'West' },
+    { x: 'Q4', y: 150, series: 'West' },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'bar',
+  colors: ['#3366ff', '#ff6633'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+---
+
+## Pie Chart (원형 차트)
+
+### 기본 파이 차트
+
+비율을 표시하는 원형 차트입니다.
+
+<ChartExample
+  title="Simple Pie Chart"
+  description="시장 점유율"
+  chartType="pie"
+  data={{
+    points: [
+      { x: 'Chrome', y: 65 },
+      { x: 'Safari', y: 19 },
+      { x: 'Firefox', y: 10 },
+      { x: 'Edge', y: 4 },
+      { x: 'Others', y: 2 },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'],
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 'Chrome', y: 65 },
+    { x: 'Safari', y: 19 },
+    { x: 'Firefox', y: 10 },
+    { x: 'Edge', y: 4 },
+    { x: 'Others', y: 2 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'pie',
+  colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'],
+});`}
+  client:load
+/>
+
+### 도넛 차트
+
+중앙이 비어있는 도넛 형태의 차트입니다.
+
+<ChartExample
+  title="Donut Chart"
+  description="매출 구성 비율"
+  chartType="pie"
+  data={{
+    points: [
+      { x: 'Product', y: 45 },
+      { x: 'Service', y: 30 },
+      { x: 'Subscription', y: 20 },
+      { x: 'Other', y: 5 },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33'],
+    innerRadius: 0.5,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 'Product', y: 45 },
+    { x: 'Service', y: 30 },
+    { x: 'Subscription', y: 20 },
+    { x: 'Other', y: 5 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'pie',
+  colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33'],
+  innerRadius: 0.5, // 도넛 차트 (0-1 사이)
+});`}
+  client:load
+/>
+
+---
+
+## Scatter Chart (산점도)
+
+### 기본 산점도
+
+두 변수 간의 상관관계를 표시하는 산점도입니다.
+
+<ChartExample
+  title="Simple Scatter Chart"
+  description="키와 몸무게의 상관관계"
+  chartType="scatter"
+  data={{
+    points: [
+      { x: 160, y: 55 },
+      { x: 165, y: 60 },
+      { x: 170, y: 65 },
+      { x: 175, y: 70 },
+      { x: 180, y: 75 },
+      { x: 185, y: 80 },
+      { x: 162, y: 58 },
+      { x: 168, y: 63 },
+      { x: 172, y: 68 },
+      { x: 178, y: 73 },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 160, y: 55 },
+    { x: 165, y: 60 },
+    { x: 170, y: 65 },
+    { x: 175, y: 70 },
+    { x: 180, y: 75 },
+    { x: 185, y: 80 },
+    { x: 162, y: 58 },
+    { x: 168, y: 63 },
+    { x: 172, y: 68 },
+    { x: 178, y: 73 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'scatter',
+  colors: ['#3366ff'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+### 다중 그룹 산점도
+
+여러 그룹을 색상으로 구분하는 산점도입니다.
+
+<ChartExample
+  title="Multi-Group Scatter Chart"
+  description="성별에 따른 키와 몸무게"
+  chartType="scatter"
+  data={{
+    points: [
+      { x: 160, y: 55, series: 'Female' },
+      { x: 165, y: 60, series: 'Female' },
+      { x: 162, y: 58, series: 'Female' },
+      { x: 168, y: 63, series: 'Female' },
+      { x: 170, y: 65, series: 'Male' },
+      { x: 175, y: 70, series: 'Male' },
+      { x: 180, y: 75, series: 'Male' },
+      { x: 185, y: 80, series: 'Male' },
+      { x: 172, y: 68, series: 'Male' },
+      { x: 178, y: 73, series: 'Male' },
+    ],
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#ff6633', '#3366ff'],
+    showGrid: true,
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 160, y: 55, series: 'Female' },
+    { x: 165, y: 60, series: 'Female' },
+    { x: 162, y: 58, series: 'Female' },
+    { x: 168, y: 63, series: 'Female' },
+    { x: 170, y: 65, series: 'Male' },
+    { x: 175, y: 70, series: 'Male' },
+    { x: 180, y: 75, series: 'Male' },
+    { x: 185, y: 80, series: 'Male' },
+    { x: 172, y: 68, series: 'Male' },
+    { x: 178, y: 73, series: 'Male' },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'scatter',
+  colors: ['#ff6633', '#3366ff'],
+  showGrid: true,
+});`}
+  client:load
+/>
+
+---
+
+## 다음 단계
+
+- [Advanced Examples](/examples/advanced) - 고급 기능 예제
+- [Interactive Examples](/examples/interaction) - 인터랙션 예제
+- [API Reference](/api) - 전체 API 문서

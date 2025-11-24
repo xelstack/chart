@@ -1,0 +1,147 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Bar Chart
+description: 막대 차트 상세 가이드
+---
+
+# Bar Chart (막대 차트)
+
+막대 차트는 카테고리별 데이터를 비교하는 데 가장 효과적인 차트입니다. 각 항목의 크기를 직관적으로 비교할 수 있습니다.
+
+## 기본 사용법
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: '1분기', y: 100 },
+    { x: '2분기', y: 150 },
+    { x: '3분기', y: 120 },
+    { x: '4분기', y: 180 },
+  ],
+};
+
+const chart = createChart(container, dataset, {
+  type: 'bar',
+  title: '분기별 매출',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+```
+
+## 고급 기능
+
+### 그룹화된 막대
+
+```typescript
+const groupedData = {
+  points: [
+    { x: '1월', y: 100, series: '제품 A' },
+    { x: '1월', y: 80, series: '제품 B' },
+    { x: '2월', y: 120, series: '제품 A' },
+    { x: '2월', y: 90, series: '제품 B' },
+    { x: '3월', y: 110, series: '제품 A' },
+    { x: '3월', y: 95, series: '제품 B' },
+  ],
+};
+
+const chart = createChart(container, groupedData, {
+  type: 'bar',
+  title: '월별 제품 판매량',
+  colors: ['#3366ff', '#ff6633'],
+});
+```
+
+### 수평 막대
+
+```typescript
+const horizontalData = {
+  points: [
+    { x: '한국', y: 500 },
+    { x: '일본', y: 450 },
+    { x: '중국', y: 600 },
+    { x: '미국', y: 550 },
+  ],
+};
+
+const chart = createChart(container, horizontalData, {
+  type: 'bar',
+  orientation: 'horizontal', // 수평 방향
+  title: '국가별 판매량',
+});
+```
+
+## 스타일링
+
+### 막대 색상
+
+```typescript
+const config = {
+  type: 'bar',
+  colors: [
+    '#3366ff', // 첫 번째 그룹
+    '#ff6633', // 두 번째 그룹
+    '#33ff66', // 세 번째 그룹
+  ],
+};
+```
+
+### 막대 너비
+
+```typescript
+const config = {
+  type: 'bar',
+  barWidth: 40, // 픽셀 단위
+};
+```
+
+## 사용 사례
+
+### 설문조사 결과
+
+```typescript
+const surveyData = {
+  points: [
+    { x: '매우 만족', y: 45 },
+    { x: '만족', y: 30 },
+    { x: '보통', y: 15 },
+    { x: '불만족', y: 7 },
+    { x: '매우 불만족', y: 3 },
+  ],
+};
+
+const chart = createChart(container, surveyData, {
+  type: 'bar',
+  title: '고객 만족도 조사',
+  colors: ['#00aa00'],
+});
+```
+
+### 순위 데이터
+
+```typescript
+const rankingData = {
+  points: [
+    { x: 'Product A', y: 1500 },
+    { x: 'Product B', y: 1200 },
+    { x: 'Product C', y: 1000 },
+    { x: 'Product D', y: 800 },
+    { x: 'Product E', y: 600 },
+  ],
+};
+
+const chart = createChart(container, rankingData, {
+  type: 'bar',
+  title: 'Top 5 판매 제품',
+  colors: ['#3366ff'],
+});
+```
+
+## 다음 단계
+
+- [Pie Chart](/charts/pie) - 파이 차트 가이드
+- [API Reference](/api) - 전체 API 문서
+- [예제](/examples) - 더 많은 예제 보기

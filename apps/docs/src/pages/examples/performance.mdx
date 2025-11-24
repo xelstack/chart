@@ -1,0 +1,626 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Performance Examples
+description: XelStack Chart 성능 최적화 예제
+---
+
+# Performance Examples (성능 최적화)
+
+대용량 데이터와 실시간 업데이트 상황에서 최적의 성능을 내는 방법을 알아봅니다.
+
+## 대용량 데이터 처리
+
+### 10,000개 이상 데이터 포인트
+
+대량의 데이터를 효율적으로 렌더링합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 10,000개 데이터 생성
+const largeDataset = {
+  points: Array.from({ length: 10000 }, (_, i) => ({
+    x: i,
+    y: Math.sin(i / 100) * 100 + Math.random() * 20,
+  })),
+};
+
+console.time('chart-render');
+
+const chart = createChart(container, largeDataset, {
+  type: 'line',
+  width: 1200,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+console.timeEnd('chart-render');
+// 일반적으로 50-100ms 내외
+```
+
+### 데이터 샘플링
+
+많은 데이터를 표시할 때 자동 샘플링을 활용합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 100,000개 데이터 (매우 큰 데이터셋)
+const massiveDataset = {
+  points: Array.from({ length: 100000 }, (_, i) => ({
+    x: i,
+    y: Math.sin(i / 1000) * 100 + Math.random() * 10,
+  })),
+};
+
+// 차트는 자동으로 적절한 샘플링 적용
+const chart = createChart(container, massiveDataset, {
+  type: 'line',
+  width: 1200,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+// 화면에 표시할 픽셀 수보다 데이터가 많으면 자동 샘플링
+```
+
+### LTTB 샘플링 알고리즘
+
+Largest Triangle Three Buckets 알고리즘을 사용한 다운샘플링입니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// LTTB 샘플링 함수
+function lttbSample(
+  data: Array<{ x: number; y: number }>,
+  threshold: number
+): Array<{ x: number; y: number }> {
+  if (data.length <= threshold) return data;
+
+  const sampled: Array<{ x: number; y: number }> = [];
+  const bucketSize = (data.length - 2) / (threshold - 2);
+
+  // 첫 번째 포인트는 항상 포함
+  sampled.push(data[0]);
+
+  for (let i = 0; i < threshold - 2; i++) {
+    const bucketStart = Math.floor((i + 0) * bucketSize) + 1;
+    const bucketEnd = Math.floor((i + 1) * bucketSize) + 1;
+    const bucketMiddle = Math.floor((bucketStart + bucketEnd) / 2);
+
+    // 현재 버킷에서 최대 삼각형 면적을 가진 포인트 선택
+    let maxArea = -1;
+    let maxIdx = bucketStart;
+
+    for (let j = bucketStart; j < bucketEnd; j++) {
+      const area =
+        Math.abs(
+          (data[maxIdx].x - sampled[sampled.length - 1].x) *
+            (data[j].y - sampled[sampled.length - 1].y) -
+            (data[maxIdx].x - sampled[sampled.length - 1].x) *
+            (data[bucketMiddle].y - sampled[sampled.length - 1].y)
+        ) / 2;
+
+      if (area > maxArea) {
+        maxArea = area;
+        maxIdx = j;
+      }
+    }
+
+    sampled.push(data[maxIdx]);
+  }
+
+  // 마지막 포인트는 항상 포함
+  sampled.push(data[data.length - 1]);
+
+  return sampled;
+}
+
+// 사용 예제
+const rawData = Array.from({ length: 10000 }, (_, i) => ({
+  x: i,
+  y: Math.sin(i / 100) * 100,
+}));
+
+const sampledData = lttbSample(rawData, 500); // 500개로 다운샘플링
+
+const chart = createChart(container, { points: sampledData }, {
+  type: 'line',
+  colors: ['#3366ff'],
+});
+```
+
+---
+
+## 실시간 업데이트 최적화
+
+### 배치 업데이트
+
+여러 업데이트를 한 번에 처리합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const chart = createChart(container, { points: [] }, {
+  type: 'line',
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+let updateQueue: Array<{ x: number; y: number }> = [];
+
+// 데이터 수신 (매우 빠른 속도)
+function onDataReceived(point: { x: number; y: number }) {
+  updateQueue.push(point);
+}
+
+// 60fps로 배치 업데이트
+setInterval(() => {
+  if (updateQueue.length === 0) return;
+
+  const currentPoints = chart.getData().points;
+  const newPoints = [...currentPoints, ...updateQueue].slice(-1000);
+
+  chart.updateData({ points: newPoints });
+  chart.render();
+
+  updateQueue = []; // 큐 초기화
+}, 16); // ~60fps
+```
+
+### requestAnimationFrame 활용
+
+브라우저 렌더링 주기에 맞춰 업데이트합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const chart = createChart(container, { points: [] }, {
+  type: 'line',
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+let needsUpdate = false;
+let pendingData: Array<{ x: number; y: number }> = [];
+
+function scheduleUpdate(newData: Array<{ x: number; y: number }>) {
+  pendingData.push(...newData);
+  needsUpdate = true;
+}
+
+function renderLoop() {
+  if (needsUpdate && pendingData.length > 0) {
+    const currentPoints = chart.getData().points;
+    const newPoints = [...currentPoints, ...pendingData].slice(-1000);
+
+    chart.updateData({ points: newPoints });
+    chart.render();
+
+    pendingData = [];
+    needsUpdate = false;
+  }
+
+  requestAnimationFrame(renderLoop);
+}
+
+renderLoop();
+
+// 데이터 추가
+setInterval(() => {
+  scheduleUpdate([{
+    x: Date.now(),
+    y: Math.random() * 100,
+  }]);
+}, 10); // 100Hz 데이터
+```
+
+### 디바운스와 쓰로틀
+
+업데이트 빈도를 제어합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 디바운스 함수
+function debounce<T extends (...args: Parameters<T>) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+}
+
+// 쓰로틀 함수
+function throttle<T extends (...args: Parameters<T>) => void>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle = false;
+
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
+const chart = createChart(container, dataset, config);
+
+// 디바운스된 업데이트 (마지막 호출 후 100ms 후 실행)
+const debouncedUpdate = debounce((newData: Dataset) => {
+  chart.updateData(newData);
+  chart.render();
+}, 100);
+
+// 쓰로틀된 업데이트 (최대 100ms마다 한 번)
+const throttledUpdate = throttle((newData: Dataset) => {
+  chart.updateData(newData);
+  chart.render();
+}, 100);
+
+// 사용
+window.addEventListener('resize', () => {
+  throttledUpdate(chart.getData());
+});
+```
+
+---
+
+## 메모리 관리
+
+### 데이터 윈도우
+
+메모리 사용을 제한하기 위해 일정 개수만 유지합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const MAX_POINTS = 1000; // 최대 1000개만 유지
+
+const chart = createChart(container, { points: [] }, {
+  type: 'line',
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+function addPoint(point: { x: number; y: number }) {
+  const currentPoints = chart.getData().points;
+
+  // 윈도우 슬라이딩: 최근 N개만 유지
+  const newPoints = [...currentPoints, point].slice(-MAX_POINTS);
+
+  chart.updateData({ points: newPoints });
+  chart.render();
+}
+
+// 실시간 데이터 추가
+let time = 0;
+setInterval(() => {
+  addPoint({
+    x: time++,
+    y: Math.sin(time / 10) * 50 + 50,
+  });
+}, 100);
+```
+
+### 차트 인스턴스 정리
+
+컴포넌트 언마운트 시 메모리를 해제합니다.
+
+```typescript
+import { createChart, type Chart } from '@xelstack/chart-core';
+
+class ChartManager {
+  private chart: Chart | null = null;
+  private updateInterval: ReturnType<typeof setInterval> | null = null;
+
+  initialize(container: HTMLElement) {
+    // 기존 차트가 있으면 정리
+    this.cleanup();
+
+    // 새 차트 생성
+    this.chart = createChart(container, dataset, config);
+
+    // 업데이트 시작
+    this.updateInterval = setInterval(() => {
+      this.update();
+    }, 1000);
+  }
+
+  update() {
+    if (this.chart !== null) {
+      // 업데이트 로직
+      this.chart.render();
+    }
+  }
+
+  cleanup() {
+    // 인터벌 정리
+    if (this.updateInterval !== null) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = null;
+    }
+
+    // 차트 정리
+    if (this.chart !== null) {
+      this.chart.destroy();
+      this.chart = null;
+    }
+  }
+}
+
+// 사용 예제
+const manager = new ChartManager();
+manager.initialize(container);
+
+// 페이지 이탈 시 정리
+window.addEventListener('beforeunload', () => {
+  manager.cleanup();
+});
+```
+
+---
+
+## 렌더링 최적화
+
+### Canvas 레이어링
+
+여러 Canvas를 사용하여 부분 업데이트를 최적화합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+// 정적 레이어 (그리드, 축)와 동적 레이어 (데이터) 분리
+// XelStack Chart는 내부적으로 이미 최적화되어 있지만,
+// 필요시 여러 차트 인스턴스를 겹쳐서 사용 가능
+
+const staticChart = createChart(staticLayer, dataset, {
+  type: 'line',
+  colors: ['#cccccc'],
+  showGrid: true,
+});
+
+const dynamicChart = createChart(dynamicLayer, dataset, {
+  type: 'line',
+  colors: ['#3366ff'],
+  showGrid: false, // 그리드는 정적 레이어에만
+});
+
+// 동적 데이터만 업데이트 (더 빠름)
+function updateData(newData: Dataset) {
+  dynamicChart.updateData(newData);
+  dynamicChart.render();
+  // staticChart는 다시 렌더링하지 않음
+}
+```
+
+### 부분 렌더링
+
+변경된 부분만 업데이트합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const chart = createChart(container, dataset, config);
+
+// 설정만 변경 (데이터는 그대로)
+function updateColors(newColors: string[]) {
+  chart.updateConfig({ colors: newColors });
+  chart.render(); // 데이터는 재계산하지 않고 색상만 변경
+}
+
+// 데이터만 변경 (설정은 그대로)
+function updateData(newData: Dataset) {
+  chart.updateData(newData);
+  chart.render(); // 설정은 재계산하지 않고 데이터만 변경
+}
+```
+
+---
+
+## Web Worker 활용
+
+### 백그라운드 데이터 처리
+
+무거운 데이터 처리를 Web Worker로 분리합니다.
+
+```typescript
+// worker.ts
+self.addEventListener('message', (e: MessageEvent) => {
+  const { type, data } = e.data;
+
+  if (type === 'process') {
+    // 무거운 데이터 처리
+    const processed = data.map((point: { x: number; y: number }) => ({
+      x: point.x,
+      y: Math.sin(point.x / 100) * 100,
+    }));
+
+    self.postMessage({ type: 'result', data: processed });
+  }
+});
+```
+
+```typescript
+// main.ts
+import { createChart } from '@xelstack/chart-core';
+
+const chart = createChart(container, { points: [] }, config);
+
+// Worker 생성
+const worker = new Worker(new URL('./worker.ts', import.meta.url));
+
+worker.addEventListener('message', (e: MessageEvent) => {
+  if (e.data.type === 'result') {
+    chart.updateData({ points: e.data.data });
+    chart.render();
+  }
+});
+
+// 데이터 처리 요청
+function processData(rawData: Array<{ x: number; y: number }>) {
+  worker.postMessage({ type: 'process', data: rawData });
+}
+
+// 사용
+const largeData = Array.from({ length: 100000 }, (_, i) => ({
+  x: i,
+  y: Math.random() * 100,
+}));
+
+processData(largeData);
+```
+
+---
+
+## 벤치마크
+
+### 성능 측정
+
+차트 렌더링 성능을 측정합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+function benchmark(
+  name: string,
+  dataSize: number,
+  iterations: number = 10
+) {
+  const dataset = {
+    points: Array.from({ length: dataSize }, (_, i) => ({
+      x: i,
+      y: Math.random() * 100,
+    })),
+  };
+
+  const times: number[] = [];
+
+  for (let i = 0; i < iterations; i++) {
+    const start = performance.now();
+
+    const chart = createChart(container, dataset, {
+      type: 'line',
+      colors: ['#3366ff'],
+    });
+
+    const end = performance.now();
+    times.push(end - start);
+
+    chart.destroy();
+  }
+
+  const avg = times.reduce((sum, t) => sum + t, 0) / times.length;
+  const min = Math.min(...times);
+  const max = Math.max(...times);
+
+  console.log(`${name} (${dataSize} points):`);
+  console.log(`  Average: ${avg.toFixed(2)}ms`);
+  console.log(`  Min: ${min.toFixed(2)}ms`);
+  console.log(`  Max: ${max.toFixed(2)}ms`);
+}
+
+// 벤치마크 실행
+benchmark('Small Dataset', 100);
+benchmark('Medium Dataset', 1000);
+benchmark('Large Dataset', 10000);
+benchmark('Huge Dataset', 100000);
+```
+
+### 메모리 프로파일링
+
+메모리 사용량을 모니터링합니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+function profileMemory() {
+  // @ts-expect-error - performance.memory is non-standard
+  const memBefore = performance.memory?.usedJSHeapSize ?? 0;
+
+  const dataset = {
+    points: Array.from({ length: 100000 }, (_, i) => ({
+      x: i,
+      y: Math.random() * 100,
+    })),
+  };
+
+  const chart = createChart(container, dataset, {
+    type: 'line',
+    colors: ['#3366ff'],
+  });
+
+  // @ts-expect-error - performance.memory is non-standard
+  const memAfter = performance.memory?.usedJSHeapSize ?? 0;
+  const memUsed = (memAfter - memBefore) / (1024 * 1024);
+
+  console.log(`Memory used: ${memUsed.toFixed(2)} MB`);
+
+  return chart;
+}
+
+const chart = profileMemory();
+
+// 정리 후 메모리 확인
+chart.destroy();
+// @ts-expect-error - performance.memory is non-standard
+const memFinal = performance.memory?.usedJSHeapSize ?? 0;
+console.log(`Memory after cleanup: ${(memFinal / (1024 * 1024)).toFixed(2)} MB`);
+```
+
+---
+
+## 최적화 체크리스트
+
+### 성능 최적화 팁
+
+1. **데이터 크기 제한**
+   - 화면에 표시할 수 있는 포인트 수를 고려
+   - 필요시 샘플링 적용
+   - 슬라이딩 윈도우로 메모리 제한
+
+2. **업데이트 빈도 조절**
+   - requestAnimationFrame 사용
+   - 디바운스/쓰로틀 적용
+   - 배치 업데이트
+
+3. **메모리 관리**
+   - 차트 인스턴스 정리
+   - 불필요한 데이터 제거
+   - 이벤트 리스너 정리
+
+4. **렌더링 최적화**
+   - 변경된 부분만 업데이트
+   - Canvas 레이어링
+   - Web Worker 활용
+
+5. **측정 및 모니터링**
+   - Performance API 사용
+   - 메모리 프로파일링
+   - 벤치마크 작성
+
+---
+
+## 다음 단계
+
+- [API Reference](/api) - 전체 API 문서
+- [Examples](/examples) - 다양한 예제
+- [Playground](/playground) - 직접 실험해보기

@@ -1,0 +1,502 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Types API
+description: XelStack Chart 타입 정의
+---
+
+# Types
+
+XelStack Chart의 모든 TypeScript 타입 정의입니다.
+
+## 핵심 타입
+
+### DataPoint
+
+차트의 개별 데이터 포인트를 나타냅니다.
+
+```typescript
+interface DataPoint {
+  x: number | Date | string;
+  y: number;
+  series?: string;
+}
+```
+
+**속성:**
+- `x`: X축 값 (숫자, 날짜, 또는 문자열)
+- `y`: Y축 값 (숫자만 가능)
+- `series`: 시리즈 이름 (다중 라인 차트용, 선택사항)
+
+**예제:**
+
+```typescript
+// 숫자 포인트
+const point1: DataPoint = { x: 1, y: 10 };
+
+// 날짜 포인트
+const point2: DataPoint = { x: new Date(), y: 20 };
+
+// 문자열 포인트 (카테고리)
+const point3: DataPoint = { x: 'January', y: 30 };
+
+// 시리즈 포인트
+const point4: DataPoint = { x: 1, y: 10, series: 'Line A' };
+```
+
+### Dataset
+
+차트 데이터셋을 나타냅니다.
+
+```typescript
+interface Dataset {
+  points: DataPoint[];
+}
+```
+
+**속성:**
+- `points`: DataPoint 배열
+
+**예제:**
+
+```typescript
+const dataset: Dataset = {
+  points: [
+    { x: 1, y: 10 },
+    { x: 2, y: 20 },
+    { x: 3, y: 15 }
+  ]
+};
+```
+
+### ChartConfig
+
+차트 설정을 나타냅니다.
+
+```typescript
+interface ChartConfig {
+  type: 'line' | 'bar' | 'pie' | 'scatter';
+  width?: number;
+  height?: number;
+  title?: string;
+  colors?: string[];
+  showGrid?: boolean;
+  lineWidth?: number;
+  pointRadius?: number;
+  barWidth?: number;
+  barGap?: number;
+  innerRadius?: number;
+  showLabels?: boolean;
+  showPercentage?: boolean;
+}
+```
+
+**속성:**
+
+#### 공통 옵션
+- `type`: 차트 타입 (필수)
+- `width`: 차트 너비 (픽셀)
+- `height`: 차트 높이 (픽셀)
+- `title`: 차트 제목
+- `colors`: 색상 배열
+- `showGrid`: 그리드 표시 여부
+
+#### Line Chart 옵션
+- `lineWidth`: 선 두께
+- `pointRadius`: 포인트 반지름
+
+#### Bar Chart 옵션
+- `barWidth`: 막대 너비 (상대값)
+- `barGap`: 막대 간격 (상대값)
+
+#### Pie Chart 옵션
+- `innerRadius`: 내부 반지름 (도넛 차트)
+- `showLabels`: 라벨 표시 여부
+- `showPercentage`: 퍼센트 표시 여부
+
+#### Scatter Chart 옵션
+- `pointRadius`: 포인트 반지름
+
+**예제:**
+
+```typescript
+const config: ChartConfig = {
+  type: 'line',
+  width: 800,
+  height: 400,
+  title: 'Sales Chart',
+  colors: ['#3366ff', '#ff3366'],
+  showGrid: true,
+  lineWidth: 2,
+  pointRadius: 3
+};
+```
+
+### ChartHandle
+
+생성된 차트를 제어하는 인터페이스입니다.
+
+```typescript
+interface ChartHandle {
+  updateData: (dataset: Dataset) => void;
+  updateConfig: (config: Partial<ChartConfig>) => void;
+  render: () => void;
+  destroy: () => void;
+  getData: () => Dataset;
+  getConfig: () => ChartConfig;
+}
+```
+
+자세한 내용은 [ChartHandle API](/api/chart-handle)를 참조하세요.
+
+### Viewport
+
+차트의 뷰포트(보이는 영역)를 나타냅니다.
+
+```typescript
+interface Viewport {
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  zoomLevel: number;
+}
+```
+
+**속성:**
+- `xMin`: X축 최소값
+- `xMax`: X축 최대값
+- `yMin`: Y축 최소값
+- `yMax`: Y축 최대값
+- `zoomLevel`: 줌 레벨 (1.0 = 100%)
+
+**예제:**
+
+```typescript
+const viewport: Viewport = {
+  xMin: 0,
+  xMax: 100,
+  yMin: 0,
+  yMax: 50,
+  zoomLevel: 1.0
+};
+```
+
+## 차트별 옵션 타입
+
+### LineChartOptions
+
+```typescript
+interface LineChartOptions {
+  colors?: string[];
+  lineWidth?: number;
+  pointRadius?: number;
+  fill?: boolean;
+}
+```
+
+### BarChartOptions
+
+```typescript
+interface BarChartOptions {
+  colors?: string[];
+  barWidth?: number;
+  barGap?: number;
+  horizontal?: boolean;
+}
+```
+
+### PieChartOptions
+
+```typescript
+interface PieChartOptions {
+  colors?: string[];
+  innerRadius?: number;
+  outerRadius?: number;
+  showLabels?: boolean;
+  showPercentage?: boolean;
+}
+```
+
+### ScatterChartOptions
+
+```typescript
+interface ScatterChartOptions {
+  colors?: string[];
+  pointRadius?: number;
+  pointStyle?: 'circle' | 'square' | 'triangle';
+}
+```
+
+## 함수형 프로그래밍 타입
+
+### PureFunction
+
+순수 함수 타입입니다.
+
+```typescript
+type PureFunction<T, R> = (input: T) => R;
+type PureFunction2<T1, T2, R> = (input1: T1, input2: T2) => R;
+type PureFunctionN<T extends any[], R> = (...inputs: T) => R;
+```
+
+**예제:**
+
+```typescript
+// 순수 함수: 항상 같은 입력에 같은 출력
+const double: PureFunction<number, number> = (x) => x * 2;
+
+const add: PureFunction2<number, number, number> = (a, b) => a + b;
+
+const sum: PureFunctionN<number[], number> = (...nums) =>
+  nums.reduce((acc, n) => acc + n, 0);
+```
+
+### SideEffect
+
+사이드 이펙트를 수행하는 함수 타입입니다.
+
+```typescript
+type SideEffect<T> = (input: T) => void;
+type SideEffectWithReturn<T, R> = (input: T) => R;
+type AsyncSideEffect<T> = (input: T) => Promise<void>;
+```
+
+**예제:**
+
+```typescript
+// Canvas 렌더링 (사이드 이펙트)
+const render: SideEffect<CanvasRenderingContext2D> = (ctx) => {
+  ctx.fillRect(0, 0, 100, 100);
+};
+
+// DOM 조작 후 요소 반환
+const createElement: SideEffectWithReturn<string, HTMLElement> = (id) => {
+  const el = document.createElement('div');
+  el.id = id;
+  document.body.appendChild(el);
+  return el;
+};
+
+// 비동기 데이터 로딩
+const fetchData: AsyncSideEffect<string> = async (url) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log(data);
+};
+```
+
+### Pipe & Compose
+
+함수 합성 타입입니다.
+
+```typescript
+type Pipe<T, R> = (...fns: Array<(input: any) => any>) => (input: T) => R;
+type Compose<T, R> = (...fns: Array<(input: any) => any>) => (input: T) => R;
+```
+
+**예제:**
+
+```typescript
+import { pipe, compose } from '@xelstack/chart-core';
+
+// pipe: 왼쪽에서 오른쪽으로 실행
+const transform = pipe(
+  (x: number) => x * 2,
+  (x: number) => x + 1,
+  (x: number) => x.toString()
+);
+console.log(transform(5)); // "11"
+
+// compose: 오른쪽에서 왼쪽으로 실행
+const transform2 = compose(
+  (x: number) => x.toString(),
+  (x: number) => x + 1,
+  (x: number) => x * 2
+);
+console.log(transform2(5)); // "11"
+```
+
+### Immutable
+
+불변 데이터 타입입니다.
+
+```typescript
+type Immutable<T> = Readonly<T>;
+type ImmutableArray<T> = ReadonlyArray<T>;
+type DeepImmutable<T> = {
+  readonly [K in keyof T]: T[K] extends object
+    ? DeepImmutable<T[K]>
+    : T[K];
+};
+```
+
+**예제:**
+
+```typescript
+// 얕은 불변
+const config: Immutable<ChartConfig> = {
+  type: 'line',
+  width: 800
+};
+// config.type = 'bar'; // 에러: readonly
+
+// 불변 배열
+const points: ImmutableArray<DataPoint> = [
+  { x: 1, y: 10 }
+];
+// points.push({ x: 2, y: 20 }); // 에러: readonly
+
+// 깊은 불변
+const state: DeepImmutable<{ chart: ChartConfig }> = {
+  chart: { type: 'line', width: 800 }
+};
+// state.chart.width = 1000; // 에러: readonly
+```
+
+## 유틸리티 타입
+
+### PartialExcept
+
+일부 속성을 필수로 유지하는 Partial 타입입니다.
+
+```typescript
+type PartialExcept<T, K extends keyof T> = Partial<Omit<T, K>> & Pick<T, K>;
+```
+
+**예제:**
+
+```typescript
+// type만 필수, 나머지는 선택
+type ConfigWithType = PartialExcept<ChartConfig, 'type'>;
+
+const config: ConfigWithType = {
+  type: 'line' // type은 필수
+  // width, height 등은 선택
+};
+```
+
+### ValueOf
+
+객체 값들의 타입을 추출합니다.
+
+```typescript
+type ValueOf<T> = T[keyof T];
+```
+
+**예제:**
+
+```typescript
+const ChartTypes = {
+  LINE: 'line',
+  BAR: 'bar',
+  PIE: 'pie',
+  SCATTER: 'scatter'
+} as const;
+
+type ChartType = ValueOf<typeof ChartTypes>; // 'line' | 'bar' | 'pie' | 'scatter'
+```
+
+## 타입 가드
+
+### isDataPoint
+
+```typescript
+function isDataPoint(value: unknown): value is DataPoint {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'x' in value &&
+    'y' in value &&
+    typeof (value as any).y === 'number'
+  );
+}
+```
+
+### isDataset
+
+```typescript
+function isDataset(value: unknown): value is Dataset {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'points' in value &&
+    Array.isArray((value as any).points)
+  );
+}
+```
+
+## 타입 사용 예제
+
+### 완전한 타입 안전성
+
+```typescript
+import type {
+  DataPoint,
+  Dataset,
+  ChartConfig,
+  ChartHandle
+} from '@xelstack/chart-core';
+
+function createLineChart(
+  container: HTMLElement,
+  data: DataPoint[],
+  title: string
+): ChartHandle {
+  const dataset: Dataset = { points: data };
+
+  const config: ChartConfig = {
+    type: 'line',
+    title,
+    lineWidth: 2
+  };
+
+  return createChart(container, dataset, config);
+}
+```
+
+### 제네릭 차트 컴포넌트
+
+```typescript
+interface ChartProps<T extends ChartConfig['type']> {
+  data: Dataset;
+  type: T;
+  options?: Omit<ChartConfig, 'type'>;
+}
+
+function Chart<T extends ChartConfig['type']>({
+  data,
+  type,
+  options
+}: ChartProps<T>) {
+  const config: ChartConfig = {
+    type,
+    ...options
+  };
+
+  // 차트 생성...
+}
+```
+
+### 타입 추론
+
+```typescript
+// TypeScript가 자동으로 타입 추론
+const dataset = {
+  points: [
+    { x: 1, y: 10 },
+    { x: 2, y: 20 }
+  ]
+}; // Dataset 타입으로 추론됨
+
+const config = {
+  type: 'line' as const,
+  width: 800
+}; // ChartConfig 타입으로 추론됨
+```
+
+## 다음 단계
+
+- [createChart API](/api/create-chart) - 차트 생성 함수
+- [ChartHandle API](/api/chart-handle) - 차트 제어 인터페이스
+- [Utilities API](/api/utilities) - 유틸리티 함수들
+- [Functional Programming](/guides/functional-programming) - 함수형 프로그래밍 가이드

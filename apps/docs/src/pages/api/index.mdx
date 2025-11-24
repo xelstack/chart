@@ -1,0 +1,693 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: API Reference
+description: XelStack Chart 전체 API 문서
+---
+
+# API Reference
+
+XelStack Chart의 전체 API 문서입니다. 모든 함수는 함수형 프로그래밍 패러다임을 따릅니다.
+
+## 목차
+
+### 핵심 API
+- [createChart](#createchart) - 차트 생성 함수
+- [ChartHandle](#charthandle) - 차트 제어 인터페이스
+- [createWidget](#createwidget) - 경량 위젯 생성
+
+### Export된 함수들
+
+**순수 함수 (Pure Functions)**
+- [뷰포트 계산](#뷰포트-계산) - calculateViewportFromDataset, calculateZoomedViewport, calculatePannedViewport
+- [설정 병합](#설정-병합) - mergeConfig, deepMergeConfig
+- [데이터 변환](#데이터-변환) - filterPoints, sortPoints, mapPoints
+- [샘플링](#샘플링) - uniformSample, filterByViewport, adaptiveSample
+
+**함수형 유틸리티**
+- [함수 합성](#함수-합성) - pipe, compose
+- [커링](#커링) - curry
+- [불변성](#불변성-유틸리티) - deepFreeze, immutableUpdate
+
+**사이드 이펙트 함수 (Side Effect Functions)**
+- [Canvas 렌더링](#canvas-렌더링) - renderToCanvas
+- [DOM 조작](#dom-조작) - createCanvas, updateCanvasSize, removeCanvas, destroyCanvas
+- [이벤트 핸들러](#이벤트-핸들러) - setupResizeObserver, cleanupResizeObserver
+
+**차트 렌더링 함수**
+- [차트별 렌더링](#차트-렌더링-함수) - renderLineChart, renderBarChart, renderPieChart, renderScatterChart
+
+**타입 & 에러**
+- [타입 정의](#타입-정의) - DataPoint, Dataset, ChartConfig, Viewport 등
+- [에러 클래스](#에러-클래스) - ValidationError, ChartTypeError
+
+---
+
+## 핵심 API
+
+### createChart
+
+차트를 생성하고 ChartHandle을 반환하는 핵심 함수입니다.
+
+```typescript
+function createChart(
+  container: HTMLElement,
+  dataset: Dataset,
+  config: ChartConfig
+): ChartHandle
+```
+
+**매개변수:**
+- `container`: 차트를 렌더링할 HTML 요소
+- `dataset`: 차트 데이터 (`{ points: DataPoint[] }`)
+- `config`: 차트 설정 (type, width, height 등)
+
+**반환값:**
+`ChartHandle` - 차트를 제어할 수 있는 핸들 객체
+
+**예제:**
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const chart = createChart(
+  document.getElementById('chart'),
+  { points: [{ x: 1, y: 10 }, { x: 2, y: 20 }] },
+  { type: 'line', title: 'My Chart', showGrid: true }
+);
+```
+
+**자세한 문서:** [createChart API](/api/create-chart)
+
+### ChartHandle
+
+차트를 제어하는 인터페이스입니다.
+
+```typescript
+interface ChartHandle {
+  updateData: (dataset: Dataset) => void;
+  updateConfig: (config: Partial<ChartConfig>) => void;
+  render: () => void;
+  destroy: () => void;
+  getData: () => Dataset;
+  getConfig: () => ChartConfig;
+}
+```
+
+**메서드:**
+- `updateData(dataset)` - 데이터 업데이트 후 자동 재렌더링
+- `updateConfig(config)` - 설정 업데이트 후 자동 재렌더링
+- `render()` - 수동 재렌더링
+- `destroy()` - 차트 제거 및 리소스 정리
+- `getData()` - 현재 데이터 반환 (불변)
+- `getConfig()` - 현재 설정 반환 (불변)
+
+**자세한 문서:** [ChartHandle API](/api/chart-handle)
+
+### createWidget
+
+경량 위젯을 생성합니다.
+
+```typescript
+function createWidget(
+  container: HTMLElement,
+  dataset: Dataset,
+  config: WidgetConfig
+): WidgetInstance
+```
+
+---
+
+## 순수 함수
+
+순수 함수는 동일한 입력에 대해 항상 동일한 출력을 반환하며, 부수 효과가 없습니다.
+
+### 뷰포트 계산
+
+#### calculateViewportFromDataset
+
+데이터셋으로부터 적절한 뷰포트를 자동 계산합니다.
+
+```typescript
+function calculateViewportFromDataset(
+  dataset: Dataset,
+  padding?: number
+): Viewport
+```
+
+**예제:**
+
+```typescript
+import { calculateViewportFromDataset } from '@xelstack/chart-core';
+
+const viewport = calculateViewportFromDataset(dataset, 0.1);
+// { xMin: 0, xMax: 110, yMin: 0, yMax: 55, zoomLevel: 1.0 }
+```
+
+#### calculateZoomedViewport
+
+줌 레벨을 적용한 뷰포트를 계산합니다.
+
+```typescript
+function calculateZoomedViewport(
+  viewport: Viewport,
+  zoomLevel: number,
+  centerX: number,
+  centerY: number
+): Viewport
+```
+
+#### calculatePannedViewport
+
+팬(이동)을 적용한 뷰포트를 계산합니다.
+
+```typescript
+function calculatePannedViewport(
+  viewport: Viewport,
+  deltaX: number,
+  deltaY: number
+): Viewport
+```
+
+### 설정 병합
+
+#### mergeConfig
+
+설정을 얕게 병합합니다.
+
+```typescript
+function mergeConfig(
+  defaults: ChartConfig,
+  overrides: Partial<ChartConfig>
+): ChartConfig
+```
+
+#### deepMergeConfig
+
+설정을 깊게 병합합니다 (중첩 객체 포함).
+
+```typescript
+function deepMergeConfig(
+  defaults: ChartConfig,
+  overrides: Partial<ChartConfig>
+): ChartConfig
+```
+
+### 데이터 변환
+
+#### filterPoints
+
+조건에 맞는 데이터 포인트만 필터링합니다.
+
+```typescript
+function filterPoints(
+  dataset: Dataset,
+  predicate: (point: DataPoint) => boolean
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { filterPoints } from '@xelstack/chart-core';
+
+const filtered = filterPoints(dataset, (p) => p.y > 20);
+```
+
+#### sortPoints
+
+데이터 포인트를 정렬합니다.
+
+```typescript
+function sortPoints(
+  dataset: Dataset,
+  compareFn: (a: DataPoint, b: DataPoint) => number
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { sortPoints } from '@xelstack/chart-core';
+
+const sorted = sortPoints(dataset, (a, b) => a.x - b.x);
+```
+
+#### mapPoints
+
+각 데이터 포인트를 변환합니다.
+
+```typescript
+function mapPoints(
+  dataset: Dataset,
+  mapper: (point: DataPoint) => DataPoint
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { mapPoints } from '@xelstack/chart-core';
+
+const doubled = mapPoints(dataset, (p) => ({ ...p, y: p.y * 2 }));
+```
+
+### 샘플링
+
+대용량 데이터를 효율적으로 처리하기 위한 샘플링 함수들입니다.
+
+#### uniformSample
+
+균등 샘플링을 수행합니다.
+
+```typescript
+function uniformSample(
+  dataset: Dataset,
+  maxPoints: number
+): Dataset
+```
+
+#### filterByViewport
+
+뷰포트 밖의 포인트를 필터링합니다 (가상화).
+
+```typescript
+function filterByViewport(
+  dataset: Dataset,
+  viewport: Viewport,
+  margin?: number
+): Dataset
+```
+
+#### adaptiveSample
+
+적응형 샘플링을 수행합니다.
+
+```typescript
+function adaptiveSample(
+  dataset: Dataset,
+  maxPoints: number,
+  importanceWeight?: number
+): Dataset
+```
+
+---
+
+## 함수형 유틸리티
+
+### 함수 합성
+
+#### pipe
+
+함수들을 왼쪽에서 오른쪽으로 합성합니다.
+
+```typescript
+function pipe<T, R>(...fns: Array<(input: any) => any>): (input: T) => R
+```
+
+**예제:**
+
+```typescript
+import { pipe, filterPoints, sortPoints, mapPoints } from '@xelstack/chart-core';
+
+const transform = pipe(
+  (data) => filterPoints(data, (p) => p.y > 0),
+  (data) => sortPoints(data, (a, b) => a.x - b.x),
+  (data) => mapPoints(data, (p) => ({ ...p, y: p.y * 2 }))
+);
+
+const result = transform(dataset);
+```
+
+#### compose
+
+함수들을 오른쪽에서 왼쪽으로 합성합니다.
+
+```typescript
+function compose<T, R>(...fns: Array<(input: any) => any>): (input: T) => R
+```
+
+### 커링
+
+#### curry
+
+함수를 커링된 형태로 변환합니다.
+
+```typescript
+function curry<T extends any[], R>(fn: (...args: T) => R): Curried<T, R>
+```
+
+**예제:**
+
+```typescript
+import { curry } from '@xelstack/chart-core';
+
+const add = (a: number, b: number, c: number) => a + b + c;
+const curriedAdd = curry(add);
+
+console.log(curriedAdd(5)(10)(3)); // 18
+```
+
+### 불변성 유틸리티
+
+#### deepFreeze
+
+객체를 깊게 동결합니다.
+
+```typescript
+function deepFreeze<T>(obj: T): Readonly<T>
+```
+
+#### immutableUpdate
+
+불변 방식으로 객체를 업데이트합니다.
+
+```typescript
+function immutableUpdate<T>(obj: T, updates: Partial<T>): T
+```
+
+---
+
+## 사이드 이펙트 함수
+
+사이드 이펙트 함수는 DOM 조작, Canvas 렌더링 등 외부 상태를 변경합니다.
+
+### Canvas 렌더링
+
+#### renderToCanvas
+
+차트를 Canvas에 렌더링합니다.
+
+```typescript
+function renderToCanvas(
+  ctx: CanvasRenderingContext2D,
+  dataset: Dataset,
+  config: ChartConfig,
+  viewport: Viewport
+): void
+```
+
+### DOM 조작
+
+#### createCanvas
+
+Canvas 요소를 생성하고 컨테이너에 추가합니다.
+
+```typescript
+function createCanvas(
+  container: HTMLElement,
+  width: number,
+  height: number
+): HTMLCanvasElement
+```
+
+#### updateCanvasSize
+
+Canvas 크기를 업데이트합니다.
+
+```typescript
+function updateCanvasSize(
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number
+): void
+```
+
+#### removeCanvas
+
+Canvas 요소를 제거합니다.
+
+```typescript
+function removeCanvas(canvas: HTMLCanvasElement): void
+```
+
+#### destroyCanvas
+
+Canvas를 완전히 파괴하고 리소스를 정리합니다.
+
+```typescript
+function destroyCanvas(canvas: HTMLCanvasElement): void
+```
+
+### 이벤트 핸들러
+
+#### setupResizeObserver
+
+ResizeObserver를 설정합니다.
+
+```typescript
+function setupResizeObserver(
+  container: HTMLElement,
+  callback: (width: number, height: number) => void
+): ResizeObserver
+```
+
+#### cleanupResizeObserver
+
+ResizeObserver를 정리합니다.
+
+```typescript
+function cleanupResizeObserver(observer: ResizeObserver): void
+```
+
+---
+
+## 차트 렌더링 함수
+
+각 차트 타입별 저수준 렌더링 함수입니다.
+
+### renderLineChart
+
+선 차트를 렌더링합니다.
+
+```typescript
+function renderLineChart(
+  ctx: CanvasRenderingContext2D,
+  points: DataPoint[],
+  width: number,
+  height: number,
+  options?: LineChartOptions
+): void
+```
+
+### renderBarChart
+
+막대 차트를 렌더링합니다.
+
+```typescript
+function renderBarChart(
+  ctx: CanvasRenderingContext2D,
+  points: DataPoint[],
+  width: number,
+  height: number,
+  options?: BarChartOptions
+): void
+```
+
+### renderPieChart
+
+원형 차트를 렌더링합니다.
+
+```typescript
+function renderPieChart(
+  ctx: CanvasRenderingContext2D,
+  points: DataPoint[],
+  width: number,
+  height: number,
+  options?: PieChartOptions
+): void
+```
+
+### renderScatterChart
+
+산점도를 렌더링합니다.
+
+```typescript
+function renderScatterChart(
+  ctx: CanvasRenderingContext2D,
+  points: DataPoint[],
+  width: number,
+  height: number,
+  options?: ScatterChartOptions
+): void
+```
+
+---
+
+## 타입 정의
+
+전체 타입 정의는 [Types API 문서](/api/types)를 참조하세요.
+
+### 기본 타입
+
+```typescript
+// 데이터 포인트
+interface DataPoint {
+  x: number | Date | string;
+  y: number;
+  series?: string;
+}
+
+// 데이터셋
+interface Dataset {
+  points: DataPoint[];
+}
+
+// 차트 타입
+type ChartType = 'line' | 'bar' | 'pie' | 'scatter';
+
+// 차트 설정
+interface ChartConfig {
+  type: ChartType;
+  width?: number;
+  height?: number;
+  title?: string;
+  colors?: string[];
+  showGrid?: boolean;
+  lineWidth?: number;
+  pointRadius?: number;
+  barWidth?: number;
+  barGap?: number;
+  innerRadius?: number;
+}
+
+// 뷰포트
+interface Viewport {
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  zoomLevel: number;
+}
+```
+
+---
+
+## 에러 클래스
+
+### ValidationError
+
+데이터 검증 실패 시 발생하는 에러입니다.
+
+```typescript
+class ValidationError extends Error {
+  constructor(message: string);
+}
+```
+
+### ChartTypeError
+
+잘못된 차트 타입 사용 시 발생하는 에러입니다.
+
+```typescript
+class ChartTypeError extends Error {
+  constructor(type: string);
+}
+```
+
+**예제:**
+
+```typescript
+import { createChart, ValidationError } from '@xelstack/chart-core';
+
+try {
+  createChart(container, invalidDataset, config);
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('데이터 검증 실패:', error.message);
+  }
+}
+```
+
+---
+
+## 전체 Import 예제
+
+```typescript
+// 핵심 API
+import { createChart, createWidget } from '@xelstack/chart-core';
+import type { ChartHandle } from '@xelstack/chart-core';
+
+// 순수 함수
+import {
+  calculateViewportFromDataset,
+  calculateZoomedViewport,
+  calculatePannedViewport,
+  mergeConfig,
+  deepMergeConfig,
+  filterPoints,
+  sortPoints,
+  mapPoints,
+  uniformSample,
+  filterByViewport,
+  adaptiveSample
+} from '@xelstack/chart-core';
+
+// 함수형 유틸리티
+import {
+  pipe,
+  compose,
+  curry,
+  deepFreeze,
+  immutableUpdate
+} from '@xelstack/chart-core';
+
+// 사이드 이펙트 함수
+import {
+  renderToCanvas,
+  createCanvas,
+  updateCanvasSize,
+  removeCanvas,
+  destroyCanvas,
+  setupResizeObserver,
+  cleanupResizeObserver
+} from '@xelstack/chart-core';
+
+// 차트 렌더링 함수
+import {
+  renderLineChart,
+  renderBarChart,
+  renderPieChart,
+  renderScatterChart
+} from '@xelstack/chart-core';
+
+// 타입
+import type {
+  Dataset,
+  DataPoint,
+  ChartConfig,
+  ChartType,
+  Viewport,
+  ChartState,
+  LineChartOptions,
+  BarChartOptions,
+  PieChartOptions,
+  ScatterChartOptions,
+  WidgetConfig,
+  WidgetInstance
+} from '@xelstack/chart-core';
+
+// 에러
+import { ValidationError, ChartTypeError } from '@xelstack/chart-core';
+```
+
+---
+
+## 다음 단계
+
+### 상세 API 문서
+- [createChart API](/api/create-chart) - 차트 생성 함수 상세
+- [ChartHandle API](/api/chart-handle) - 차트 제어 인터페이스 상세
+- [Types API](/api/types) - 전체 타입 정의
+- [Utilities API](/api/utilities) - 유틸리티 함수 상세
+
+### 가이드
+- [Quick Start](/getting-started/quick-start) - 빠르게 시작하기
+- [Functional Programming](/guides/functional-programming) - 함수형 프로그래밍
+- [Performance](/guides/performance) - 성능 최적화
+- [Migration](/guides/migration) - 다른 라이브러리에서 마이그레이션
+
+### 예제
+- [Basic Examples](/examples/basic) - 기본 사용 예제
+- [Advanced Examples](/examples/advanced) - 고급 사용 예제
+- [Interaction Examples](/examples/interaction) - 인터랙션 예제
+- [Playground](/playground) - 직접 시도해보기

@@ -1,0 +1,508 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Configuration Guide
+description: XelStack Chart 설정 가이드
+---
+
+# Configuration Guide (설정 가이드)
+
+XelStack Chart의 모든 설정 옵션을 자세히 알아봅니다.
+
+## 기본 설정
+
+### 필수 설정
+
+차트를 생성할 때 반드시 제공해야 하는 설정입니다.
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const config = {
+  type: 'line', // 필수: 차트 타입
+};
+
+const chart = createChart(container, dataset, config);
+```
+
+### 타입별 기본값
+
+각 차트 타입은 다음과 같은 기본값을 가집니다:
+
+```typescript
+// Line Chart 기본값
+{
+  type: 'line',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: false,
+  lineWidth: 2,
+  pointRadius: 3,
+}
+
+// Bar Chart 기본값
+{
+  type: 'bar',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: false,
+  barWidth: 40,
+  barGap: 10,
+}
+
+// Pie Chart 기본값
+{
+  type: 'pie',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'],
+  showLabels: true,
+  showPercentage: true,
+  innerRadius: 0, // 0이면 일반 pie, 0-1이면 도넛
+}
+
+// Scatter Chart 기본값
+{
+  type: 'scatter',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+  pointRadius: 5,
+}
+```
+
+---
+
+## 크기 설정
+
+### 고정 크기
+
+픽셀 단위로 정확한 크기를 지정합니다.
+
+```typescript
+const config = {
+  type: 'line',
+  width: 1200,  // 픽셀
+  height: 800,  // 픽셀
+};
+```
+
+### 반응형 크기
+
+컨테이너 크기에 맞춰 동적으로 조정합니다.
+
+```typescript
+const container = document.getElementById('chart')!;
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  width: container.clientWidth,
+  height: container.clientHeight,
+});
+
+// ResizeObserver로 자동 크기 조정
+const observer = new ResizeObserver(() => {
+  chart.updateConfig({
+    width: container.clientWidth,
+    height: container.clientHeight,
+  });
+  chart.render();
+});
+
+observer.observe(container);
+```
+
+### 종횡비 유지
+
+특정 비율을 유지하면서 크기를 조정합니다.
+
+```typescript
+const aspectRatio = 16 / 9;
+const width = container.clientWidth;
+const height = width / aspectRatio;
+
+const config = {
+  type: 'line',
+  width,
+  height,
+};
+```
+
+---
+
+## 색상 설정
+
+### 단일 색상
+
+하나의 데이터 시리즈에 대한 색상을 지정합니다.
+
+```typescript
+const config = {
+  type: 'line',
+  colors: ['#3366ff'],
+};
+```
+
+### 다중 색상
+
+여러 데이터 시리즈에 각각 다른 색상을 지정합니다.
+
+```typescript
+const config = {
+  type: 'line',
+  colors: [
+    '#3366ff', // 시리즈 1
+    '#ff6633', // 시리즈 2
+    '#33ff66', // 시리즈 3
+  ],
+};
+```
+
+### 색상 팔레트
+
+미리 정의된 색상 팔레트를 사용합니다.
+
+```typescript
+// 기본 팔레트
+const defaultPalette = ['#3366ff', '#ff6633', '#33ff66', '#ffcc33', '#cc66ff'];
+
+// 파스텔 팔레트
+const pastelPalette = ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFDFBA'];
+
+// 다크 팔레트
+const darkPalette = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'];
+
+const config = {
+  type: 'line',
+  colors: pastelPalette,
+};
+```
+
+### 그라데이션 색상
+
+Canvas 그라데이션을 사용합니다.
+
+```typescript
+// Note: 현재 버전에서는 직접 지원하지 않으며,
+// 향후 버전에서 추가될 예정입니다.
+```
+
+---
+
+## 그리드 설정
+
+### 그리드 표시
+
+X, Y축 그리드를 표시합니다.
+
+```typescript
+const config = {
+  type: 'line',
+  showGrid: true,
+};
+```
+
+### 그리드 스타일 (고급)
+
+```typescript
+// Note: 현재 버전에서는 기본 그리드만 지원하며,
+// 향후 버전에서 스타일 커스터마이징이 추가될 예정입니다.
+```
+
+---
+
+## 타이틀 및 레이블
+
+### 차트 타이틀
+
+```typescript
+const config = {
+  type: 'line',
+  title: '월별 매출 추이',
+};
+```
+
+### 축 레이블 (고급)
+
+```typescript
+// Note: 현재 버전에서는 기본 축만 지원하며,
+// 향후 버전에서 축 레이블 커스터마이징이 추가될 예정입니다.
+```
+
+---
+
+## Line Chart 전용 설정
+
+### 라인 스타일
+
+```typescript
+const config = {
+  type: 'line',
+  lineWidth: 3,        // 라인 두께
+  pointRadius: 5,      // 포인트 크기
+  smooth: true,        // 곡선 보간 (향후 지원 예정)
+  stepped: false,      // 계단식 라인 (향후 지원 예정)
+};
+```
+
+### 영역 채우기
+
+```typescript
+// Note: 향후 버전에서 area fill 기능이 추가될 예정입니다.
+```
+
+---
+
+## Bar Chart 전용 설정
+
+### 막대 스타일
+
+```typescript
+const config = {
+  type: 'bar',
+  barWidth: 50,        // 막대 너비 (픽셀)
+  barGap: 5,           // 막대 간격 (픽셀)
+  orientation: 'vertical', // 'vertical' | 'horizontal' (향후 지원)
+};
+```
+
+### 누적 막대
+
+```typescript
+// Note: 향후 버전에서 stacked bar 기능이 추가될 예정입니다.
+```
+
+---
+
+## Pie Chart 전용 설정
+
+### 파이 스타일
+
+```typescript
+const config = {
+  type: 'pie',
+  innerRadius: 0.5,    // 0-1 사이 값, 도넛 차트 만들기
+  showLabels: true,    // 레이블 표시
+  showPercentage: true, // 백분율 표시
+  startAngle: 0,       // 시작 각도 (향후 지원)
+};
+```
+
+### 슬라이스 분리
+
+```typescript
+// Note: 향후 버전에서 exploded slice 기능이 추가될 예정입니다.
+```
+
+---
+
+## Scatter Chart 전용 설정
+
+### 포인트 스타일
+
+```typescript
+const config = {
+  type: 'scatter',
+  pointRadius: 8,       // 포인트 크기
+  pointShape: 'circle', // 포인트 모양 (향후 지원)
+};
+```
+
+### 동적 포인트 크기
+
+```typescript
+// 데이터에 size 속성 추가
+const dataset = {
+  points: [
+    { x: 10, y: 20, size: 5 },
+    { x: 20, y: 30, size: 10 },
+    { x: 30, y: 40, size: 15 },
+  ],
+};
+
+const config = {
+  type: 'scatter',
+  pointSize: 'dynamic', // size 속성 기반 (향후 지원)
+};
+```
+
+---
+
+## 타입 안전성
+
+### TypeScript 타입
+
+모든 설정은 TypeScript로 타입이 지정되어 있습니다.
+
+```typescript
+import type { ChartConfig } from '@xelstack/chart-core';
+
+const config: ChartConfig = {
+  type: 'line',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+};
+
+// 잘못된 타입은 컴파일 에러 발생
+const badConfig: ChartConfig = {
+  type: 'invalid', // ❌ 에러: 'invalid'는 ChartType이 아님
+};
+```
+
+### 타입별 설정
+
+각 차트 타입에 맞는 설정만 허용합니다.
+
+```typescript
+// Line Chart
+import type { LineChartConfig } from '@xelstack/chart-core';
+
+const lineConfig: LineChartConfig = {
+  type: 'line',
+  lineWidth: 2,
+  pointRadius: 3,
+};
+
+// Bar Chart
+import type { BarChartConfig } from '@xelstack/chart-core';
+
+const barConfig: BarChartConfig = {
+  type: 'bar',
+  barWidth: 40,
+  barGap: 10,
+};
+```
+
+---
+
+## 부분 업데이트
+
+### updateConfig 메서드
+
+설정의 일부만 변경할 수 있습니다.
+
+```typescript
+const chart = createChart(container, dataset, {
+  type: 'line',
+  width: 800,
+  height: 600,
+});
+
+// 제목만 변경
+chart.updateConfig({
+  title: '새로운 제목',
+});
+
+// 여러 설정 동시 변경
+chart.updateConfig({
+  width: 1000,
+  colors: ['#ff0000'],
+  showGrid: true,
+});
+
+// 변경사항 반영
+chart.render();
+```
+
+### 불변성 유지
+
+원본 설정 객체는 변경되지 않습니다.
+
+```typescript
+const originalConfig = {
+  type: 'line' as const,
+  width: 800,
+};
+
+const chart = createChart(container, dataset, originalConfig);
+
+chart.updateConfig({ width: 1000 });
+
+console.log(originalConfig.width); // 800 (원본 유지)
+```
+
+---
+
+## 설정 검증
+
+### 런타임 검증
+
+잘못된 설정은 런타임에 에러를 발생시킵니다.
+
+```typescript
+try {
+  const chart = createChart(container, dataset, {
+    type: 'invalid', // ❌ 런타임 에러
+  });
+} catch (error) {
+  console.error('Invalid chart type:', error);
+}
+```
+
+### 기본값 폴백
+
+필수 설정이 없으면 기본값을 사용합니다.
+
+```typescript
+const chart = createChart(container, dataset, {
+  type: 'line',
+  // width, height 미지정 시 기본값 사용
+});
+
+// 실제 적용된 값 확인
+console.log(chart.getConfig());
+// { type: 'line', width: 800, height: 600, ... }
+```
+
+---
+
+## 성능 최적화
+
+### 설정 캐싱
+
+동일한 설정을 재사용할 때는 객체를 재사용합니다.
+
+```typescript
+const config = {
+  type: 'line',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+};
+
+// 여러 차트에 동일한 설정 사용
+const chart1 = createChart(container1, dataset1, config);
+const chart2 = createChart(container2, dataset2, config);
+```
+
+### 최소 업데이트
+
+변경된 설정만 업데이트합니다.
+
+```typescript
+// ✓ 좋은 예: 변경된 것만 업데이트
+chart.updateConfig({ title: '새 제목' });
+
+// ✗ 나쁜 예: 모든 설정을 다시 전달
+chart.updateConfig({
+  type: 'line',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+  title: '새 제목',
+});
+```
+
+---
+
+## 다음 단계
+
+- [API Reference](/api) - 전체 API 문서
+- [Examples](/examples) - 설정 예제 모음
+- [차트 타입](/charts) - 타입별 설정 가이드

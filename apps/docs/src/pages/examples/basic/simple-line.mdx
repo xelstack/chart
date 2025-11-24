@@ -1,0 +1,139 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Simple Line Chart
+description: 기본 선 차트 만들기
+---
+
+import ChartExample from '../../../components/ChartExample';
+
+# Simple Line Chart
+
+가장 기본적인 선 차트를 만드는 방법입니다.
+
+## 기본 예제
+
+<ChartExample
+  title="Simple Line Chart"
+  description="월별 데이터를 선 차트로 표시"
+  chartType="line"
+  data={{
+    points: [
+      { x: 1, y: 10 },
+      { x: 2, y: 25 },
+      { x: 3, y: 17 },
+      { x: 4, y: 32 },
+      { x: 5, y: 28 }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff'],
+    showGrid: true
+  }}
+  code={`import { createChart } from '@xelstack/chart-core';
+
+const dataset = {
+  points: [
+    { x: 1, y: 10 },
+    { x: 2, y: 25 },
+    { x: 3, y: 17 },
+    { x: 4, y: 32 },
+    { x: 5, y: 28 }
+  ]
+};
+
+const config = {
+  type: 'line',
+  title: 'Simple Line Chart',
+  width: 800,
+  height: 400,
+  showGrid: true
+};
+
+const chart = createChart(
+  document.getElementById('chart'),
+  dataset,
+  config
+);`}
+  client:load
+/>
+
+## 다중 라인
+
+<ChartExample
+  title="Multi-Series Line Chart"
+  description="여러 시리즈를 동시에 표시"
+  chartType="line"
+  data={{
+    points: [
+      { x: 1, y: 10, series: 'Series A' },
+      { x: 2, y: 25, series: 'Series A' },
+      { x: 3, y: 17, series: 'Series A' },
+      { x: 1, y: 15, series: 'Series B' },
+      { x: 2, y: 30, series: 'Series B' },
+      { x: 3, y: 22, series: 'Series B' }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#3366ff', '#ff3366'],
+    showGrid: true
+  }}
+  code={`const dataset = {
+  points: [
+    { x: 1, y: 10, series: 'Series A' },
+    { x: 2, y: 25, series: 'Series A' },
+    { x: 3, y: 17, series: 'Series A' },
+    { x: 1, y: 15, series: 'Series B' },
+    { x: 2, y: 30, series: 'Series B' },
+    { x: 3, y: 22, series: 'Series B' }
+  ]
+};
+
+const config = {
+  type: 'line',
+  colors: ['#3366ff', '#ff3366'],
+  lineWidth: 2
+};`}
+  client:load
+/>
+
+## 커스텀 스타일
+
+<ChartExample
+  title="Styled Line Chart"
+  description="선 두께와 포인트 스타일 커스터마이징"
+  chartType="line"
+  data={{
+    points: [
+      { x: 1, y: 10 },
+      { x: 2, y: 25 },
+      { x: 3, y: 17 },
+      { x: 4, y: 32 },
+      { x: 5, y: 28 }
+    ]
+  }}
+  config={{
+    width: 800,
+    height: 400,
+    colors: ['#ff6b6b'],
+    showGrid: true
+  }}
+  code={`const config = {
+  type: 'line',
+  title: 'Styled Line Chart',
+  colors: ['#ff6b6b'],
+  lineWidth: 3,
+  pointRadius: 5,
+  showGrid: true
+};`}
+  client:load
+/>
+
+## 다음 단계
+
+- [Simple Bar Chart](/examples/basic/simple-bar)
+- [Simple Pie Chart](/examples/basic/simple-pie)
+- [Simple Scatter Chart](/examples/basic/simple-scatter)

@@ -1,0 +1,649 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Utilities API
+description: XelStack Chart 유틸리티 함수들
+---
+
+# Utilities
+
+XelStack Chart가 제공하는 유틸리티 함수들입니다.
+
+## 함수형 프로그래밍 유틸리티
+
+### pipe
+
+함수들을 왼쪽에서 오른쪽으로 합성합니다.
+
+```typescript
+function pipe<T, R>(...fns: Array<(input: any) => any>): (input: T) => R
+```
+
+**예제:**
+
+```typescript
+import { pipe } from '@xelstack/chart-core';
+
+// 여러 변환 함수를 순서대로 적용
+const transform = pipe(
+  (x: number) => x * 2,     // 첫 번째
+  (x: number) => x + 10,    // 두 번째
+  (x: number) => x / 2      // 세 번째
+);
+
+console.log(transform(5)); // (5 * 2 + 10) / 2 = 10
+```
+
+**데이터 변환 예제:**
+
+```typescript
+import { pipe, filterPoints, sortPoints, mapPoints } from '@xelstack/chart-core';
+
+const processData = pipe(
+  (data: Dataset) => filterPoints(data, (p) => p.y > 0),
+  (data: Dataset) => sortPoints(data, (a, b) => a.x - b.x),
+  (data: Dataset) => mapPoints(data, (p) => ({ ...p, y: p.y * 2 }))
+);
+
+const processed = processData(dataset);
+```
+
+### compose
+
+함수들을 오른쪽에서 왼쪽으로 합성합니다.
+
+```typescript
+function compose<T, R>(...fns: Array<(input: any) => any>): (input: T) => R
+```
+
+**예제:**
+
+```typescript
+import { compose } from '@xelstack/chart-core';
+
+// pipe와 반대 방향으로 실행
+const transform = compose(
+  (x: number) => x / 2,     // 세 번째 실행
+  (x: number) => x + 10,    // 두 번째 실행
+  (x: number) => x * 2      // 첫 번째 실행
+);
+
+console.log(transform(5)); // (5 * 2 + 10) / 2 = 10
+```
+
+### curry
+
+함수를 커링된 형태로 변환합니다.
+
+```typescript
+function curry<T extends any[], R>(
+  fn: (...args: T) => R
+): Curried<T, R>
+```
+
+**예제:**
+
+```typescript
+import { curry } from '@xelstack/chart-core';
+
+// 일반 함수
+const add = (a: number, b: number, c: number) => a + b + c;
+
+// 커링된 함수
+const curriedAdd = curry(add);
+
+// 부분 적용
+const add5 = curriedAdd(5);
+const add5And10 = add5(10);
+console.log(add5And10(3)); // 18
+
+// 또는 한번에
+console.log(curriedAdd(5)(10)(3)); // 18
+```
+
+**실용적 예제:**
+
+```typescript
+import { curry } from '@xelstack/chart-core';
+
+// 필터 함수 생성기
+const createFilter = curry(
+  (threshold: number, points: DataPoint[]) =>
+    points.filter(p => p.y > threshold)
+);
+
+const filterAbove10 = createFilter(10);
+const filterAbove50 = createFilter(50);
+
+const highValues = filterAbove50(dataset.points);
+```
+
+## 데이터 변환 함수
+
+### filterPoints
+
+조건에 맞는 데이터 포인트만 필터링합니다.
+
+```typescript
+function filterPoints(
+  dataset: Dataset,
+  predicate: (point: DataPoint) => boolean
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { filterPoints } from '@xelstack/chart-core';
+
+// y 값이 20보다 큰 포인트만
+const filtered = filterPoints(dataset, (p) => p.y > 20);
+
+// x 값이 짝수인 포인트만
+const evenX = filterPoints(dataset, (p) =>
+  typeof p.x === 'number' && p.x % 2 === 0
+);
+
+// 특정 시리즈만
+const seriesA = filterPoints(dataset, (p) => p.series === 'A');
+```
+
+### sortPoints
+
+데이터 포인트를 정렬합니다.
+
+```typescript
+function sortPoints(
+  dataset: Dataset,
+  compareFn: (a: DataPoint, b: DataPoint) => number
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { sortPoints } from '@xelstack/chart-core';
+
+// x 값 기준 오름차순
+const sortedByX = sortPoints(dataset, (a, b) =>
+  (a.x as number) - (b.x as number)
+);
+
+// y 값 기준 내림차순
+const sortedByY = sortPoints(dataset, (a, b) => b.y - a.y);
+
+// 날짜 기준 정렬
+const sortedByDate = sortPoints(dataset, (a, b) =>
+  (a.x as Date).getTime() - (b.x as Date).getTime()
+);
+```
+
+### mapPoints
+
+각 데이터 포인트를 변환합니다.
+
+```typescript
+function mapPoints(
+  dataset: Dataset,
+  mapper: (point: DataPoint) => DataPoint
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { mapPoints } from '@xelstack/chart-core';
+
+// y 값을 2배로
+const doubled = mapPoints(dataset, (p) => ({
+  ...p,
+  y: p.y * 2
+}));
+
+// 정규화 (0-1 범위로)
+const max = Math.max(...dataset.points.map(p => p.y));
+const normalized = mapPoints(dataset, (p) => ({
+  ...p,
+  y: p.y / max
+}));
+
+// x 값을 날짜로 변환
+const withDates = mapPoints(dataset, (p) => ({
+  ...p,
+  x: new Date(p.x as string)
+}));
+```
+
+## 뷰포트 계산 함수
+
+### calculateViewportFromDataset
+
+데이터셋으로부터 뷰포트를 계산합니다.
+
+```typescript
+function calculateViewportFromDataset(
+  dataset: Dataset,
+  padding?: number
+): Viewport
+```
+
+**예제:**
+
+```typescript
+import { calculateViewportFromDataset } from '@xelstack/chart-core';
+
+// 기본 뷰포트 (10% 패딩)
+const viewport = calculateViewportFromDataset(dataset);
+
+// 커스텀 패딩 (20%)
+const viewport = calculateViewportFromDataset(dataset, 0.2);
+
+console.log(viewport);
+// {
+//   xMin: 0,
+//   xMax: 110,  // 최대값 100 + 10% 패딩
+//   yMin: 0,
+//   yMax: 55,   // 최대값 50 + 10% 패딩
+//   zoomLevel: 1.0
+// }
+```
+
+### calculateZoomedViewport
+
+줌 레벨을 적용한 뷰포트를 계산합니다.
+
+```typescript
+function calculateZoomedViewport(
+  viewport: Viewport,
+  zoomLevel: number,
+  centerX: number,
+  centerY: number
+): Viewport
+```
+
+**예제:**
+
+```typescript
+import { calculateZoomedViewport } from '@xelstack/chart-core';
+
+// 2배 줌인 (중심점: 50, 25)
+const zoomed = calculateZoomedViewport(
+  viewport,
+  2.0,
+  50,
+  25
+);
+
+// 0.5배 줌아웃
+const zoomedOut = calculateZoomedViewport(
+  viewport,
+  0.5,
+  50,
+  25
+);
+```
+
+### calculatePannedViewport
+
+팬(이동)을 적용한 뷰포트를 계산합니다.
+
+```typescript
+function calculatePannedViewport(
+  viewport: Viewport,
+  deltaX: number,
+  deltaY: number
+): Viewport
+```
+
+**예제:**
+
+```typescript
+import { calculatePannedViewport } from '@xelstack/chart-core';
+
+// 오른쪽으로 10, 위로 5 이동
+const panned = calculatePannedViewport(viewport, 10, 5);
+
+// 왼쪽으로 20 이동
+const pannedLeft = calculatePannedViewport(viewport, -20, 0);
+```
+
+## 설정 병합 함수
+
+### mergeConfig
+
+설정을 병합합니다 (얕은 병합).
+
+```typescript
+function mergeConfig(
+  defaults: ChartConfig,
+  overrides: Partial<ChartConfig>
+): ChartConfig
+```
+
+**예제:**
+
+```typescript
+import { mergeConfig } from '@xelstack/chart-core';
+
+const defaults: ChartConfig = {
+  type: 'line',
+  width: 800,
+  height: 400,
+  showGrid: true
+};
+
+const overrides = {
+  title: 'My Chart',
+  showGrid: false
+};
+
+const merged = mergeConfig(defaults, overrides);
+// {
+//   type: 'line',
+//   width: 800,
+//   height: 400,
+//   title: 'My Chart',
+//   showGrid: false
+// }
+```
+
+### deepMergeConfig
+
+설정을 깊게 병합합니다.
+
+```typescript
+function deepMergeConfig(
+  defaults: ChartConfig,
+  overrides: Partial<ChartConfig>
+): ChartConfig
+```
+
+**예제:**
+
+```typescript
+import { deepMergeConfig } from '@xelstack/chart-core';
+
+// 중첩 객체도 병합
+const merged = deepMergeConfig(defaults, overrides);
+```
+
+## 불변성 유틸리티
+
+### freeze
+
+객체를 불변으로 만듭니다.
+
+```typescript
+function freeze<T>(obj: T): Immutable<T>
+```
+
+**예제:**
+
+```typescript
+import { freeze } from '@xelstack/chart-core';
+
+const config = freeze({
+  type: 'line',
+  width: 800
+});
+
+// config.width = 1000; // 에러: readonly
+```
+
+### clone
+
+객체를 깊게 복사합니다.
+
+```typescript
+function clone<T>(obj: T): T
+```
+
+**예제:**
+
+```typescript
+import { clone } from '@xelstack/chart-core';
+
+const original = {
+  points: [{ x: 1, y: 10 }]
+};
+
+const copy = clone(original);
+copy.points.push({ x: 2, y: 20 });
+
+console.log(original.points.length); // 1 (원본 변경 없음)
+console.log(copy.points.length); // 2
+```
+
+## 디바이스 감지
+
+### getDeviceInfo
+
+현재 디바이스 정보를 반환합니다.
+
+```typescript
+function getDeviceInfo(): {
+  pixelRatio: number;
+  isMobile: boolean;
+  isHighDPI: boolean;
+}
+```
+
+**예제:**
+
+```typescript
+import { getDeviceInfo } from '@xelstack/chart-core';
+
+const device = getDeviceInfo();
+
+if (device.isHighDPI) {
+  // 레티나 디스플레이 최적화
+  config.lineWidth = 1.5;
+}
+
+if (device.isMobile) {
+  // 모바일 최적화
+  config.pointRadius = 5; // 터치하기 쉽게 크게
+}
+```
+
+### isLowPerformanceDevice
+
+저성능 디바이스 여부를 확인합니다.
+
+```typescript
+function isLowPerformanceDevice(): boolean
+```
+
+**예제:**
+
+```typescript
+import { isLowPerformanceDevice } from '@xelstack/chart-core';
+
+if (isLowPerformanceDevice()) {
+  // 저성능 디바이스에서는 샘플링 적용
+  dataset = virtualizeDataset(dataset, viewport);
+}
+```
+
+## 가상화 함수
+
+### virtualizeDataset
+
+뷰포트 밖의 포인트를 필터링합니다.
+
+```typescript
+function virtualizeDataset(
+  dataset: Dataset,
+  viewport: Viewport,
+  margin?: number
+): Dataset
+```
+
+**예제:**
+
+```typescript
+import { virtualizeDataset } from '@xelstack/chart-core';
+
+// 보이는 영역만 렌더링 (10% 마진)
+const visible = virtualizeDataset(dataset, viewport, 0.1);
+
+// 대용량 데이터 최적화
+if (dataset.points.length > 10000) {
+  dataset = virtualizeDataset(dataset, viewport);
+}
+```
+
+## 검증 함수
+
+### validateDataset
+
+데이터셋의 유효성을 검증합니다.
+
+```typescript
+function validateDataset(dataset: unknown): dataset is Dataset
+```
+
+**예제:**
+
+```typescript
+import { validateDataset } from '@xelstack/chart-core';
+
+if (validateDataset(data)) {
+  // data는 Dataset 타입
+  createChart(container, data, config);
+} else {
+  console.error('Invalid dataset');
+}
+```
+
+### validateConfig
+
+설정의 유효성을 검증합니다.
+
+```typescript
+function validateConfig(config: unknown): config is ChartConfig
+```
+
+**예제:**
+
+```typescript
+import { validateConfig } from '@xelstack/chart-core';
+
+if (validateConfig(userConfig)) {
+  createChart(container, dataset, userConfig);
+} else {
+  console.error('Invalid config');
+}
+```
+
+## 통계 함수
+
+### getMinMax
+
+데이터셋의 최소/최대값을 계산합니다.
+
+```typescript
+function getMinMax(dataset: Dataset): {
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+}
+```
+
+**예제:**
+
+```typescript
+import { getMinMax } from '@xelstack/chart-core';
+
+const { xMin, xMax, yMin, yMax } = getMinMax(dataset);
+console.log(`X range: ${xMin} - ${xMax}`);
+console.log(`Y range: ${yMin} - ${yMax}`);
+```
+
+### getAverage
+
+평균값을 계산합니다.
+
+```typescript
+function getAverage(dataset: Dataset, axis: 'x' | 'y'): number
+```
+
+**예제:**
+
+```typescript
+import { getAverage } from '@xelstack/chart-core';
+
+const avgY = getAverage(dataset, 'y');
+console.log(`Average Y: ${avgY}`);
+```
+
+## 조합 예제
+
+### 복잡한 데이터 처리 파이프라인
+
+```typescript
+import {
+  pipe,
+  filterPoints,
+  sortPoints,
+  mapPoints,
+  virtualizeDataset,
+  getDeviceInfo
+} from '@xelstack/chart-core';
+
+// 데이터 처리 파이프라인
+const processDataset = pipe(
+  // 1. 이상치 제거
+  (data: Dataset) => filterPoints(data, (p) => p.y >= 0 && p.y <= 1000),
+
+  // 2. 정렬
+  (data: Dataset) => sortPoints(data, (a, b) => (a.x as number) - (b.x as number)),
+
+  // 3. 정규화
+  (data: Dataset) => {
+    const max = Math.max(...data.points.map(p => p.y));
+    return mapPoints(data, (p) => ({ ...p, y: p.y / max }));
+  },
+
+  // 4. 가상화 (대용량 최적화)
+  (data: Dataset) => {
+    if (data.points.length > 5000 && isLowPerformanceDevice()) {
+      return virtualizeDataset(data, viewport);
+    }
+    return data;
+  }
+);
+
+const processed = processDataset(rawDataset);
+```
+
+### 반응형 차트 설정
+
+```typescript
+import { mergeConfig, getDeviceInfo } from '@xelstack/chart-core';
+
+function createResponsiveConfig(
+  baseConfig: Partial<ChartConfig>
+): ChartConfig {
+  const device = getDeviceInfo();
+
+  const responsiveOptions: Partial<ChartConfig> = {
+    lineWidth: device.isHighDPI ? 1.5 : 2,
+    pointRadius: device.isMobile ? 5 : 3,
+    width: device.isMobile ? 350 : 800,
+    height: device.isMobile ? 250 : 400
+  };
+
+  return mergeConfig(
+    { type: 'line' },
+    { ...baseConfig, ...responsiveOptions }
+  );
+}
+```
+
+## 다음 단계
+
+- [createChart API](/api/create-chart) - 차트 생성 함수
+- [Functional Programming Guide](/guides/functional-programming) - 함수형 프로그래밍 가이드
+- [Performance Guide](/guides/performance) - 성능 최적화 가이드
+- [Examples](/examples) - 실용적인 예제들

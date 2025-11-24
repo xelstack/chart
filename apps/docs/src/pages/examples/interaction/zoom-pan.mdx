@@ -1,0 +1,313 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Zoom & Pan Example
+description: 차트에 줌과 팬 기능 구현하기
+---
+
+# Zoom & Pan
+
+차트에 줌(확대/축소)과 팬(이동) 기능을 구현하는 방법입니다.
+
+## 기본 구현
+
+```typescript
+import { createChart, calculateZoomedViewport, calculatePannedViewport } from '@xelstack/chart-core';
+
+const chart = createChart(container, dataset, {
+  type: 'line',
+  title: 'Zoom & Pan Chart',
+  width: 800,
+  height: 400,
+  showGrid: true
+});
+
+// 현재 뷰포트 상태
+let viewport = {
+  xMin: 0,
+  xMax: 100,
+  yMin: 0,
+  yMax: 100,
+  zoomLevel: 1.0
+};
+
+// 마우스 휠로 줌
+canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
+
+  const rect = canvas.getBoundingClientRect();
+  const centerX = (event.clientX - rect.left) / rect.width * 100;
+  const centerY = (event.clientY - rect.top) / rect.height * 100;
+
+  // 줌 레벨 조정
+  const zoomDelta = event.deltaY > 0 ? 0.9 : 1.1;
+  const newZoomLevel = viewport.zoomLevel * zoomDelta;
+
+  // 새 뷰포트 계산
+  viewport = calculateZoomedViewport(
+    viewport,
+    newZoomLevel,
+    centerX,
+    centerY
+  );
+
+  // 차트 재렌더링
+  chart.render();
+});
+
+// 마우스 드래그로 팬
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+canvas.addEventListener('mousedown', (event) => {
+  isDragging = true;
+  lastX = event.clientX;
+  lastY = event.clientY;
+});
+
+canvas.addEventListener('mousemove', (event) => {
+  if (!isDragging) return;
+
+  const deltaX = event.clientX - lastX;
+  const deltaY = event.clientY - lastY;
+
+  // 픽셀 델타를 데이터 좌표로 변환
+  const xRange = viewport.xMax - viewport.xMin;
+  const yRange = viewport.yMax - viewport.yMin;
+  const dataDeltaX = -(deltaX / canvas.width) * xRange;
+  const dataDeltaY = (deltaY / canvas.height) * yRange;
+
+  // 새 뷰포트 계산
+  viewport = calculatePannedViewport(viewport, dataDeltaX, dataDeltaY);
+
+  // 차트 재렌더링
+  chart.render();
+
+  lastX = event.clientX;
+  lastY = event.clientY;
+});
+
+canvas.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+  isDragging = false;
+});
+```
+
+## 터치 지원
+
+모바일 디바이스를 위한 터치 제스처 지원:
+
+```typescript
+let touchStartDistance = 0;
+let touchStartViewport = null;
+
+canvas.addEventListener('touchstart', (event) => {
+  if (event.touches.length === 2) {
+    // 두 손가락 터치 시작
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+    touchStartDistance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+    touchStartViewport = { ...viewport };
+  }
+});
+
+canvas.addEventListener('touchmove', (event) => {
+  event.preventDefault();
+
+  if (event.touches.length === 2) {
+    // 핀치 줌
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+    const currentDistance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+
+    const zoomRatio = currentDistance / touchStartDistance;
+    const centerX = (touch1.clientX + touch2.clientX) / 2;
+    const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+    viewport = calculateZoomedViewport(
+      touchStartViewport,
+      touchStartViewport.zoomLevel * zoomRatio,
+      centerX,
+      centerY
+    );
+
+    chart.render();
+  }
+});
+```
+
+## 줌 제한
+
+최소/최대 줌 레벨 제한:
+
+```typescript
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 10.0;
+
+function clampZoom(viewport) {
+  if (viewport.zoomLevel < MIN_ZOOM) {
+    viewport.zoomLevel = MIN_ZOOM;
+  } else if (viewport.zoomLevel > MAX_ZOOM) {
+    viewport.zoomLevel = MAX_ZOOM;
+  }
+  return viewport;
+}
+
+// 줌 계산 후 적용
+viewport = clampZoom(calculateZoomedViewport(...));
+```
+
+## 줌 리셋 버튼
+
+```typescript
+const resetButton = document.getElementById('reset-zoom');
+
+resetButton.addEventListener('click', () => {
+  // 원래 뷰포트로 복원
+  viewport = calculateViewportFromDataset(dataset);
+  chart.render();
+});
+```
+
+## 부드러운 애니메이션
+
+```typescript
+function smoothZoom(targetZoom, duration = 300) {
+  const startZoom = viewport.zoomLevel;
+  const startTime = Date.now();
+
+  function animate() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // 이징 함수 (easeOutCubic)
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    viewport.zoomLevel = startZoom + (targetZoom - startZoom) * eased;
+    chart.render();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  animate();
+}
+
+// 사용
+smoothZoom(2.0); // 2배 줌
+```
+
+## 완전한 예제
+
+```typescript
+import {
+  createChart,
+  calculateViewportFromDataset,
+  calculateZoomedViewport,
+  calculatePannedViewport
+} from '@xelstack/chart-core';
+
+class ZoomPanChart {
+  constructor(container, dataset, config) {
+    this.chart = createChart(container, dataset, config);
+    this.canvas = container.querySelector('canvas');
+    this.viewport = calculateViewportFromDataset(dataset);
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    // 마우스 휠 줌
+    this.canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+      this.zoom(zoomDelta, e.clientX, e.clientY);
+    });
+
+    // 마우스 드래그 팬
+    let isDragging = false;
+    let lastPos = { x: 0, y: 0 };
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      lastPos = { x: e.clientX, y: e.clientY };
+    });
+
+    this.canvas.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      const delta = {
+        x: e.clientX - lastPos.x,
+        y: e.clientY - lastPos.y
+      };
+
+      this.pan(delta.x, delta.y);
+      lastPos = { x: e.clientX, y: e.clientY };
+    });
+
+    this.canvas.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+  }
+
+  zoom(factor, centerX, centerY) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = (centerX - rect.left) / rect.width *
+              (this.viewport.xMax - this.viewport.xMin) + this.viewport.xMin;
+    const y = (centerY - rect.top) / rect.height *
+              (this.viewport.yMax - this.viewport.yMin) + this.viewport.yMin;
+
+    this.viewport = calculateZoomedViewport(
+      this.viewport,
+      this.viewport.zoomLevel * factor,
+      x,
+      y
+    );
+
+    this.chart.render();
+  }
+
+  pan(deltaX, deltaY) {
+    const xRange = this.viewport.xMax - this.viewport.xMin;
+    const yRange = this.viewport.yMax - this.viewport.yMin;
+
+    const dataDeltaX = -(deltaX / this.canvas.width) * xRange;
+    const dataDeltaY = (deltaY / this.canvas.height) * yRange;
+
+    this.viewport = calculatePannedViewport(
+      this.viewport,
+      dataDeltaX,
+      dataDeltaY
+    );
+
+    this.chart.render();
+  }
+
+  reset() {
+    this.viewport = calculateViewportFromDataset(this.chart.getData());
+    this.chart.render();
+  }
+}
+
+// 사용
+const zoomPanChart = new ZoomPanChart(
+  document.getElementById('chart'),
+  dataset,
+  { type: 'line', title: 'Zoom & Pan Chart' }
+);
+```
+
+## 다음 단계
+
+- [Tooltips](/examples/interaction/tooltips) - 툴팁 표시
+- [Click Events](/examples/interaction/click-events) - 클릭 이벤트 처리
+- [Performance Guide](/guides/performance) - 성능 최적화

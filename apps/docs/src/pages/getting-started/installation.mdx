@@ -1,0 +1,547 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 설치 가이드
+description: 다양한 환경에서 XelStack Chart를 설치하는 방법
+---
+
+# 설치 가이드
+
+XelStack Chart를 프로젝트에 설치하는 다양한 방법을 알아봅니다.
+
+## 패키지 매니저 설치
+
+### npm
+
+```bash
+npm install @xelstack/chart-core
+```
+
+### pnpm
+
+```bash
+pnpm add @xelstack/chart-core
+```
+
+### yarn
+
+```bash
+yarn add @xelstack/chart-core
+```
+
+## CDN 사용
+
+패키지 매니저 없이 CDN을 통해 직접 사용할 수 있습니다.
+
+### ES Modules
+
+```html
+<script type="module">
+  import { createChart } from 'https://esm.sh/@xelstack/chart-core';
+
+  // 차트 생성
+  const chart = createChart(container, dataset, config);
+</script>
+```
+
+### UMD (브라우저 전역 변수)
+
+```html
+<script src="https://unpkg.com/@xelstack/chart-core/dist/index.umd.js"></script>
+<script>
+  // XelStackChart 전역 객체 사용
+  const chart = XelStackChart.createChart(container, dataset, config);
+</script>
+```
+
+## 프레임워크별 설정
+
+### Vanilla JavaScript
+
+가장 간단한 사용 방법입니다. 별도의 설정 없이 바로 사용할 수 있습니다.
+
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>XelStack Chart</title>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script type="module">
+    import { createChart } from '@xelstack/chart-core';
+
+    const container = document.getElementById('chart');
+    const dataset = {
+      points: [
+        { x: 0, y: 10 },
+        { x: 1, y: 20 },
+        { x: 2, y: 15 },
+      ],
+    };
+
+    createChart(container, dataset, {
+      type: 'line',
+      title: '간단한 차트',
+    });
+  </script>
+</body>
+</html>
+```
+
+### React
+
+React 프로젝트에서 사용하는 방법입니다.
+
+#### 설치
+
+```bash
+npm install @xelstack/chart-core
+```
+
+#### 컴포넌트 작성
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { createChart, type ChartConfig, type Dataset } from '@xelstack/chart-core';
+
+interface ChartProps {
+  data: Dataset;
+  config: ChartConfig;
+}
+
+export default function Chart({ data, config }: ChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const chart = createChart(containerRef.current, data, config);
+
+    // 클린업
+    return () => {
+      chart.destroy();
+    };
+  }, [data, config]);
+
+  return <div ref={containerRef} />;
+}
+```
+
+#### 사용 예제
+
+```tsx
+import Chart from './components/Chart';
+
+function App() {
+  const dataset = {
+    points: [
+      { x: 0, y: 10 },
+      { x: 1, y: 20 },
+      { x: 2, y: 15 },
+    ],
+  };
+
+  const config = {
+    type: 'line' as const,
+    title: 'React 차트',
+    width: 800,
+    height: 600,
+  };
+
+  return (
+    <div className="App">
+      <h1>내 차트</h1>
+      <Chart data={dataset} config={config} />
+    </div>
+  );
+}
+```
+
+### Vue 3
+
+Vue 3 프로젝트에서 사용하는 방법입니다.
+
+#### 설치
+
+```bash
+npm install @xelstack/chart-core
+```
+
+#### 컴포넌트 작성
+
+```vue
+<template>
+  <div ref="chartContainer"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { createChart, type ChartConfig, type Dataset } from '@xelstack/chart-core';
+
+interface Props {
+  data: Dataset;
+  config: ChartConfig;
+}
+
+const props = defineProps<Props>();
+const chartContainer = ref<HTMLDivElement | null>(null);
+let chartInstance: ReturnType<typeof createChart> | null = null;
+
+onMounted(() => {
+  if (chartContainer.value) {
+    chartInstance = createChart(chartContainer.value, props.data, props.config);
+  }
+});
+
+onUnmounted(() => {
+  chartInstance?.destroy();
+});
+
+// 데이터 변경 시 업데이트
+watch(
+  () => props.data,
+  (newData) => {
+    chartInstance?.updateData(newData);
+    chartInstance?.render();
+  }
+);
+
+// 설정 변경 시 업데이트
+watch(
+  () => props.config,
+  (newConfig) => {
+    chartInstance?.updateConfig(newConfig);
+    chartInstance?.render();
+  }
+);
+</script>
+```
+
+#### 사용 예제
+
+```vue
+<template>
+  <div class="app">
+    <h1>내 차트</h1>
+    <Chart :data="dataset" :config="config" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import Chart from './components/Chart.vue';
+
+const dataset = ref({
+  points: [
+    { x: 0, y: 10 },
+    { x: 1, y: 20 },
+    { x: 2, y: 15 },
+  ],
+});
+
+const config = ref({
+  type: 'line' as const,
+  title: 'Vue 차트',
+  width: 800,
+  height: 600,
+});
+</script>
+```
+
+### Svelte
+
+Svelte 프로젝트에서 사용하는 방법입니다.
+
+#### 설치
+
+```bash
+npm install @xelstack/chart-core
+```
+
+#### 컴포넌트 작성
+
+```svelte
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import { createChart, type ChartConfig, type Dataset } from '@xelstack/chart-core';
+
+  export let data: Dataset;
+  export let config: ChartConfig;
+
+  let container: HTMLDivElement;
+  let chart: ReturnType<typeof createChart>;
+
+  onMount(() => {
+    chart = createChart(container, data, config);
+  });
+
+  onDestroy(() => {
+    chart?.destroy();
+  });
+
+  // 반응형 업데이트
+  $: if (chart) {
+    chart.updateData(data);
+    chart.render();
+  }
+</script>
+
+<div bind:this={container}></div>
+```
+
+#### 사용 예제
+
+```svelte
+<script lang="ts">
+  import Chart from './Chart.svelte';
+
+  const dataset = {
+    points: [
+      { x: 0, y: 10 },
+      { x: 1, y: 20 },
+      { x: 2, y: 15 },
+    ],
+  };
+
+  const config = {
+    type: 'line' as const,
+    title: 'Svelte 차트',
+    width: 800,
+    height: 600,
+  };
+</script>
+
+<main>
+  <h1>내 차트</h1>
+  <Chart {data} {config} />
+</main>
+```
+
+### Angular
+
+Angular 프로젝트에서 사용하는 방법입니다.
+
+#### 설치
+
+```bash
+npm install @xelstack/chart-core
+```
+
+#### 컴포넌트 작성
+
+```typescript
+// chart.component.ts
+import {
+  Component,
+  ElementRef,
+  Input,
+  OnInit,
+  OnDestroy,
+  OnChanges,
+  ViewChild,
+  SimpleChanges,
+} from '@angular/core';
+import { createChart, ChartConfig, Dataset } from '@xelstack/chart-core';
+
+@Component({
+  selector: 'app-chart',
+  template: '<div #chartContainer></div>',
+})
+export class ChartComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() data!: Dataset;
+  @Input() config!: ChartConfig;
+  @ViewChild('chartContainer', { static: true }) chartContainer!: ElementRef;
+
+  private chart: ReturnType<typeof createChart> | null = null;
+
+  ngOnInit() {
+    this.chart = createChart(
+      this.chartContainer.nativeElement,
+      this.data,
+      this.config
+    );
+  }
+
+  ngOnDestroy() {
+    this.chart?.destroy();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (this.chart) {
+      if (changes['data']) {
+        this.chart.updateData(this.data);
+      }
+      if (changes['config']) {
+        this.chart.updateConfig(this.config);
+      }
+      this.chart.render();
+    }
+  }
+}
+```
+
+#### 사용 예제
+
+```typescript
+// app.component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <div class="app">
+      <h1>내 차트</h1>
+      <app-chart [data]="dataset" [config]="config"></app-chart>
+    </div>
+  `,
+})
+export class AppComponent {
+  dataset = {
+    points: [
+      { x: 0, y: 10 },
+      { x: 1, y: 20 },
+      { x: 2, y: 15 },
+    ],
+  };
+
+  config = {
+    type: 'line' as const,
+    title: 'Angular 차트',
+    width: 800,
+    height: 600,
+  };
+}
+```
+
+## TypeScript 설정
+
+XelStack Chart는 TypeScript로 작성되어 완벽한 타입 지원을 제공합니다.
+
+### tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
+```
+
+### 타입 가져오기
+
+```typescript
+import type {
+  ChartConfig,
+  Dataset,
+  DataPoint,
+  ChartHandle
+} from '@xelstack/chart-core';
+```
+
+## 번들러 설정
+
+### Vite
+
+별도의 설정 없이 바로 사용할 수 있습니다.
+
+```javascript
+// vite.config.js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  // 기본 설정으로 충분
+});
+```
+
+### Webpack
+
+```javascript
+// webpack.config.js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+  },
+};
+```
+
+### Rollup
+
+```javascript
+// rollup.config.js
+import typescript from '@rollup/plugin-typescript';
+import resolve from '@rollup/plugin-node-resolve';
+
+export default {
+  input: 'src/index.ts',
+  output: {
+    file: 'dist/bundle.js',
+    format: 'esm',
+  },
+  plugins: [
+    resolve(),
+    typescript(),
+  ],
+};
+```
+
+## 문제 해결
+
+### 모듈을 찾을 수 없음
+
+```
+Cannot find module '@xelstack/chart-core'
+```
+
+**해결 방법:**
+1. 패키지가 설치되었는지 확인: `npm ls @xelstack/chart-core`
+2. node_modules 재설치: `rm -rf node_modules && npm install`
+3. 패키지 캐시 클리어: `npm cache clean --force`
+
+### 타입 정의를 찾을 수 없음
+
+```
+Could not find a declaration file for module '@xelstack/chart-core'
+```
+
+**해결 방법:**
+1. TypeScript 버전 확인 (최소 4.5 이상)
+2. tsconfig.json에서 `skipLibCheck: false` 확인
+3. `@types` 패키지 설치 불필요 (타입이 내장되어 있음)
+
+### ESM/CommonJS 충돌
+
+**해결 방법:**
+
+package.json에 다음 추가:
+
+```json
+{
+  "type": "module"
+}
+```
+
+또는 `.mjs` 확장자 사용
+
+## 다음 단계
+
+- [빠른 시작](/getting-started) - 첫 번째 차트 만들기
+- [차트 타입](/charts) - 사용 가능한 차트 타입 알아보기
+- [API 레퍼런스](/api) - 전체 API 문서

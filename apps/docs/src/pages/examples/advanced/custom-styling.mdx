@@ -1,0 +1,275 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Custom Styling Example
+description: 차트 스타일 커스터마이징하기
+---
+
+# Custom Styling
+
+차트의 스타일을 커스터마이징하는 방법입니다.
+
+## 색상 커스터마이징
+
+```typescript
+import { createChart } from '@xelstack/chart-core';
+
+const config = {
+  type: 'line',
+  title: 'Custom Colors',
+  colors: [
+    '#FF6B6B',  // 빨강
+    '#4ECDC4',  // 청록
+    '#45B7D1',  // 파랑
+    '#FFA07A',  // 주황
+    '#98D8C8'   // 민트
+  ],
+  showGrid: true
+};
+
+const chart = createChart(container, dataset, config);
+```
+
+## 선 스타일
+
+```typescript
+const config = {
+  type: 'line',
+  lineWidth: 3,       // 선 두께
+  pointRadius: 6,     // 포인트 크기
+  colors: ['#3366ff']
+};
+```
+
+## 그리드 커스터마이징
+
+```typescript
+const config = {
+  type: 'line',
+  showGrid: true,
+  gridColor: '#e0e0e0',     // 그리드 색상
+  gridLineWidth: 1          // 그리드 선 두께
+};
+```
+
+## 투명도 적용
+
+```typescript
+const config = {
+  type: 'bar',
+  colors: [
+    'rgba(255, 99, 132, 0.7)',   // 빨강 70%
+    'rgba(54, 162, 235, 0.7)',   // 파랑 70%
+    'rgba(255, 206, 86, 0.7)'    // 노랑 70%
+  ]
+};
+```
+
+## 그라데이션 색상
+
+```typescript
+// Canvas 그라데이션 생성
+const canvas = container.querySelector('canvas');
+const ctx = canvas.getContext('2d');
+
+const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+gradient.addColorStop(0, '#667eea');
+gradient.addColorStop(1, '#764ba2');
+
+const config = {
+  type: 'bar',
+  colors: [gradient]
+};
+```
+
+## 테마 시스템
+
+```typescript
+const themes = {
+  light: {
+    colors: ['#3366ff', '#ff3366', '#33ff66'],
+    gridColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
+    textColor: '#000000'
+  },
+  dark: {
+    colors: ['#667eea', '#f093fb', '#4facfe'],
+    gridColor: '#404040',
+    backgroundColor: '#1a1a1a',
+    textColor: '#ffffff'
+  }
+};
+
+function applyTheme(chart, themeName) {
+  const theme = themes[themeName];
+
+  chart.updateConfig({
+    colors: theme.colors,
+    gridColor: theme.gridColor
+  });
+
+  // 컨테이너 스타일 적용
+  chart.container.style.backgroundColor = theme.backgroundColor;
+  chart.container.style.color = theme.textColor;
+}
+
+// 사용
+applyTheme(chart, 'dark');
+```
+
+## CSS 통합
+
+```html
+<style>
+.chart-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.chart-title {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;
+}
+</style>
+
+<div class="chart-container">
+  <div class="chart-title">Beautiful Chart</div>
+  <div id="chart"></div>
+</div>
+```
+
+## 반응형 스타일
+
+```typescript
+function createResponsiveChart(container, dataset) {
+  const isMobile = window.innerWidth < 768;
+
+  const config = {
+    type: 'line',
+    width: isMobile ? 350 : 800,
+    height: isMobile ? 250 : 400,
+    lineWidth: isMobile ? 2 : 3,
+    pointRadius: isMobile ? 4 : 6,
+    colors: ['#3366ff']
+  };
+
+  const chart = createChart(container, dataset, config);
+
+  // 리사이즈 이벤트 처리
+  window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth < 768;
+
+    chart.updateConfig({
+      width: isMobile ? 350 : 800,
+      height: isMobile ? 250 : 400
+    });
+  });
+
+  return chart;
+}
+```
+
+## 완전한 예제
+
+```typescript
+class StyledChart {
+  constructor(container, dataset, theme = 'light') {
+    this.themes = {
+      light: {
+        colors: ['#3366ff', '#ff3366', '#33ff66', '#ff6633'],
+        lineWidth: 2,
+        pointRadius: 4,
+        gridColor: '#e0e0e0',
+        textColor: '#000000'
+      },
+      dark: {
+        colors: ['#667eea', '#f093fb', '#4facfe', '#00f2fe'],
+        lineWidth: 3,
+        pointRadius: 5,
+        gridColor: '#404040',
+        textColor: '#ffffff'
+      },
+      neon: {
+        colors: ['#ff00ff', '#00ffff', '#ffff00', '#ff00aa'],
+        lineWidth: 3,
+        pointRadius: 6,
+        gridColor: '#1a1a1a',
+        textColor: '#ffffff'
+      }
+    };
+
+    this.container = container;
+    this.currentTheme = theme;
+    this.chart = this.createChartWithTheme(dataset, theme);
+  }
+
+  createChartWithTheme(dataset, themeName) {
+    const theme = this.themes[themeName];
+
+    const config = {
+      type: 'line',
+      title: `Styled Chart (${themeName})`,
+      colors: theme.colors,
+      lineWidth: theme.lineWidth,
+      pointRadius: theme.pointRadius,
+      showGrid: true
+    };
+
+    // 컨테이너 스타일
+    this.container.style.backgroundColor =
+      themeName === 'dark' || themeName === 'neon' ? '#1a1a1a' : '#ffffff';
+    this.container.style.color = theme.textColor;
+    this.container.style.padding = '20px';
+    this.container.style.borderRadius = '12px';
+
+    return createChart(this.container, dataset, config);
+  }
+
+  setTheme(themeName) {
+    if (!this.themes[themeName]) return;
+
+    const theme = this.themes[themeName];
+    this.currentTheme = themeName;
+
+    this.chart.updateConfig({
+      title: `Styled Chart (${themeName})`,
+      colors: theme.colors,
+      lineWidth: theme.lineWidth,
+      pointRadius: theme.pointRadius
+    });
+
+    // 컨테이너 스타일 업데이트
+    this.container.style.backgroundColor =
+      themeName === 'dark' || themeName === 'neon' ? '#1a1a1a' : '#ffffff';
+    this.container.style.color = theme.textColor;
+
+    this.chart.render();
+  }
+
+  getAvailableThemes() {
+    return Object.keys(this.themes);
+  }
+}
+
+// 사용
+const styledChart = new StyledChart(
+  document.getElementById('chart'),
+  dataset,
+  'dark'
+);
+
+// 테마 전환
+document.getElementById('theme-selector').addEventListener('change', (e) => {
+  styledChart.setTheme(e.target.value);
+});
+```
+
+## 다음 단계
+
+- [Responsive Charts](/examples/advanced/responsive-charts)
+- [Realtime Data](/examples/advanced/realtime-data)
+- [Configuration Guide](/guides/configuration)

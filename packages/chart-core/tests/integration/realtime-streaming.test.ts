@@ -24,6 +24,9 @@ describe('Realtime Streaming', () => {
     // Save original createElement
     const originalCreateElement = document.createElement.bind(document);
 
+    // 모든 캔버스에서 공유하는 clearRect spy 생성
+    clearRectSpy = vi.fn();
+
     // Mock document.createElement to return a new canvas each time
     vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
       if (tagName === 'canvas') {
@@ -33,8 +36,7 @@ describe('Realtime Streaming', () => {
         Object.defineProperty(canvas, 'clientWidth', { value: 800 });
         Object.defineProperty(canvas, 'clientHeight', { value: 600 });
 
-        // Mock getContext
-        clearRectSpy = vi.fn();
+        // Mock getContext - 모든 캔버스에서 동일한 clearRectSpy 사용
         const mockCtx = {
           canvas,
           clearRect: clearRectSpy,
@@ -56,6 +58,7 @@ describe('Realtime Streaming', () => {
           fill: vi.fn(),
           fillText: vi.fn(),
           measureText: vi.fn(() => ({ width: 50 })),
+          drawImage: vi.fn(),
         } as unknown as CanvasRenderingContext2D;
 
         vi.spyOn(canvas, 'getContext').mockReturnValue(mockCtx);

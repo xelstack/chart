@@ -1,6 +1,7 @@
 {
   "name": "@chart/demo",
   "version": "1.0.0",
+  "type": "module",
   "description": "차트 라이브러리 데모 애플리케이션",
   "private": true,
   "scripts": {
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "vite": "^5.4.11",
+    "vite-tsconfig-paths": "^5.1.4",
     "@types/node": "^24.10.0",
     "typescript": "^5.9.3"
   }

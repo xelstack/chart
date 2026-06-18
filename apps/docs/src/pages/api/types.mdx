@@ -137,12 +137,33 @@ const config: ChartConfig = {
 
 ```typescript
 interface ChartHandle {
+  // 기본 메서드
   updateData: (dataset: Dataset) => void;
   updateConfig: (config: Partial<ChartConfig>) => void;
   render: () => void;
   destroy: () => void;
   getData: () => Dataset;
   getConfig: () => ChartConfig;
+
+  // 뷰포트 제어
+  resize: (width: number, height: number) => void;
+  resetViewport: () => void;
+  setViewport: (viewport: Viewport) => void;
+  zoom: (factor: number, centerX?: number, centerY?: number) => void;
+  pan: (deltaX: number, deltaY: number) => void;
+  getViewport: () => Viewport;
+  getState: () => ChartState;
+
+  // 실시간 데이터
+  addPoints: (points: DataPoint[], options?: AddPointsOptions) => void;
+
+  // 증분 렌더링 (실시간 최적화)
+  addPointsIncremental: (points: DataPoint[], options?: IncrementalAddPointsOptions) => void;
+  updateDataIncremental: (nextData: DataPoint[]) => void;
+  getIncrementalState: () => IncrementalRenderState;
+  pauseIncremental: () => void;
+  resumeIncremental: () => void;
+  setIncrementalOptions: (options: Partial<IncrementalRenderOptions>) => void;
 }
 ```
 
@@ -180,6 +201,117 @@ const viewport: Viewport = {
   zoomLevel: 1.0
 };
 ```
+
+## 증분 렌더링 타입
+
+실시간 차트 최적화를 위한 증분 렌더링 관련 타입입니다.
+
+### IncrementalRenderOptions
+
+증분 렌더링 설정 옵션입니다.
+
+```typescript
+interface IncrementalRenderOptions {
+  enabled?: boolean;        // 증분 렌더링 활성화 (기본값: true)
+  frameBuffering?: boolean; // 프레임 버퍼링 활성화 (기본값: true)
+  maxPoints?: number;       // 최대 포인트 수 (기본값: 무제한)
+}
+```
+
+**속성:**
+- `enabled`: 증분 렌더링 활성화 여부
+- `frameBuffering`: requestAnimationFrame 기반 프레임 버퍼링 활성화
+- `maxPoints`: 최대 보관 포인트 수 (초과 시 오래된 데이터 자동 제거)
+
+**예제:**
+
+```typescript
+// 증분 렌더링 설정
+chart.setIncrementalOptions({
+  enabled: true,
+  frameBuffering: true,
+  maxPoints: 1000
+});
+```
+
+### IncrementalAddPointsOptions
+
+포인트 추가 시 옵션입니다.
+
+```typescript
+interface IncrementalAddPointsOptions {
+  autoRender?: boolean;  // 자동 렌더링 여부 (기본값: true)
+  autoScroll?: boolean;  // 뷰포트 자동 스크롤 여부 (기본값: false)
+}
+```
+
+**속성:**
+- `autoRender`: 포인트 추가 후 자동으로 렌더링할지 여부
+- `autoScroll`: 새 데이터 추가 시 뷰포트를 자동으로 스크롤할지 여부
+
+**예제:**
+
+```typescript
+// 자동 스크롤과 함께 포인트 추가
+chart.addPointsIncremental([newPoint], {
+  autoRender: true,
+  autoScroll: true
+});
+```
+
+### IncrementalRenderState
+
+증분 렌더링 상태 정보입니다.
+
+```typescript
+interface IncrementalRenderState {
+  totalPoints: number;        // 총 데이터 포인트 수
+  pendingPoints: number;      // 렌더링 대기 중인 포인트 수
+  frameCount: number;         // 처리된 프레임 수
+  averageFrameTime: number;   // 평균 프레임 처리 시간 (ms)
+  isPaused: boolean;          // 일시정지 상태
+  isActive: boolean;          // 활성화 상태
+  isOffscreenValid: boolean;  // 오프스크린 캔버스 유효 여부
+}
+```
+
+**속성:**
+- `totalPoints`: 현재 버퍼에 저장된 총 데이터 포인트 수
+- `pendingPoints`: 다음 프레임에 렌더링될 대기 중인 포인트 수
+- `frameCount`: 지금까지 처리된 총 프레임 수
+- `averageFrameTime`: 최근 프레임들의 평균 처리 시간 (밀리초)
+- `isPaused`: `pauseIncremental()` 호출로 일시정지 상태인지 여부
+- `isActive`: 스케줄러가 활성화되어 렌더링 중인지 여부
+- `isOffscreenValid`: 오프스크린 캔버스가 유효한 상태인지 여부
+
+**예제:**
+
+```typescript
+// 성능 모니터링
+const state = chart.getIncrementalState();
+
+console.log(`총 포인트: ${state.totalPoints}`);
+console.log(`대기 중: ${state.pendingPoints}`);
+console.log(`FPS: ${Math.round(1000 / state.averageFrameTime)}`);
+
+if (state.averageFrameTime > 16) {
+  console.warn('프레임 드랍 가능성');
+}
+```
+
+### DeltaType
+
+배치 업데이트 시 델타 계산 결과 유형입니다.
+
+```typescript
+type DeltaType = 'append' | 'prepend' | 'replace' | 'none';
+```
+
+**유형:**
+- `append`: 끝에 데이터 추가 (가장 일반적인 실시간 패턴)
+- `prepend`: 앞에 데이터 추가
+- `replace`: 전체 데이터 교체 (변경이 복잡한 경우)
+- `none`: 변경 없음
 
 ## 차트별 옵션 타입
 

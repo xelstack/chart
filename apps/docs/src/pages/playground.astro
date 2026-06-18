@@ -211,6 +211,58 @@ createChart(container, dataset, {
               </p>
             </button>
           </div>
+
+          <!-- 증분 렌더링 (Incremental Rendering) 섹션 -->
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-8 mb-4 flex items-center gap-2">
+            Incremental Rendering
+            <span class="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">NEW</span>
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            새로운 증분 렌더링 API를 사용한 예제입니다. 기존 방식 대비 최대 93% 성능 향상을 제공합니다.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Incremental Realtime -->
+            <button
+              class="p-4 bg-white dark:bg-gray-800 border border-green-500 dark:border-green-600 rounded-lg hover:border-green-600 dark:hover:border-green-500 transition-colors text-left ring-2 ring-green-500/20"
+              onclick="loadTemplate('incremental-realtime')"
+            >
+              <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Incremental Realtime
+                <span class="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">NEW</span>
+              </h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                addPointsIncremental 기본 예제
+              </p>
+            </button>
+
+            <!-- Incremental Batch -->
+            <button
+              class="p-4 bg-white dark:bg-gray-800 border border-green-500 dark:border-green-600 rounded-lg hover:border-green-600 dark:hover:border-green-500 transition-colors text-left ring-2 ring-green-500/20"
+              onclick="loadTemplate('incremental-batch')"
+            >
+              <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Incremental Batch
+                <span class="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">NEW</span>
+              </h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                updateDataIncremental 델타 계산 예제
+              </p>
+            </button>
+
+            <!-- Incremental Monitor -->
+            <button
+              class="p-4 bg-white dark:bg-gray-800 border border-green-500 dark:border-green-600 rounded-lg hover:border-green-600 dark:hover:border-green-500 transition-colors text-left ring-2 ring-green-500/20"
+              onclick="loadTemplate('incremental-monitor')"
+            >
+              <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Incremental Monitor
+                <span class="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">NEW</span>
+              </h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                getIncrementalState 성능 모니터링 예제
+              </p>
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -484,6 +536,155 @@ const updateInterval = setInterval(() => {
 
 console.log('Real-time updates started. Watch console for performance metrics...');
 console.log('Updates will stop automatically after 30 seconds.');`,
+        'incremental-realtime': `// Incremental Realtime - 증분 렌더링으로 실시간 업데이트
+// 기존 방식 대비 93% 성능 향상
+
+const chart = createChart(container, { points: [] }, {
+  type: 'line',
+  title: 'Incremental Realtime (addPointsIncremental)',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+// 증분 렌더링 설정 - 최대 500개 포인트 (슬라이딩 윈도우)
+chart.setIncrementalOptions({ maxPoints: 500 });
+
+console.log('=== Incremental Realtime Demo ===');
+console.log('새 데이터만 렌더링하여 성능 최적화');
+
+let time = 0;
+const interval = setInterval(() => {
+  time++;
+
+  // 증분 렌더링 - 새 포인트만 렌더링
+  chart.addPointsIncremental([{
+    x: time,
+    y: Math.sin(time / 10) * 50 + 50 + Math.random() * 10
+  }]);
+
+  // 30초 후 중지
+  if (time >= 300) {
+    clearInterval(interval);
+    console.log('Demo stopped');
+  }
+}, 100);
+
+console.log('100ms마다 1포인트 추가 (10 points/sec)');
+console.log('30초 후 자동 중지');`,
+        'incremental-batch': `// Incremental Batch Update - 델타 계산으로 변경분만 렌더링
+// 서버에서 전체 데이터를 받아도 변경분만 처리
+
+const chart = createChart(container, { points: [] }, {
+  type: 'line',
+  title: 'Incremental Batch Update (updateDataIncremental)',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff', '#ff6633'],
+  showGrid: true,
+});
+
+chart.setIncrementalOptions({ maxPoints: 200 });
+
+console.log('=== Incremental Batch Update Demo ===');
+console.log('전체 데이터를 받아도 변경분만 렌더링');
+
+// 초기 데이터
+let currentData = Array.from({ length: 50 }, (_, i) => ({
+  x: i,
+  y: Math.sin(i / 10) * 50 + 50
+}));
+
+chart.updateDataIncremental(currentData);
+
+// 1초마다 배치 업데이트 (10개씩 추가)
+let batchCount = 0;
+const interval = setInterval(() => {
+  batchCount++;
+
+  // 새 데이터 10개 추가
+  const newPoints = Array.from({ length: 10 }, (_, i) => ({
+    x: currentData.length + i,
+    y: Math.sin((currentData.length + i) / 10) * 50 + 50 + Math.random() * 10
+  }));
+
+  currentData = [...currentData, ...newPoints];
+
+  // 델타 자동 계산 - 추가된 10개만 렌더링
+  const start = performance.now();
+  chart.updateDataIncremental(currentData);
+  const elapsed = performance.now() - start;
+
+  console.log(\`Batch \${batchCount}: +10 points, delta calc: \${elapsed.toFixed(2)}ms\`);
+
+  if (batchCount >= 15) {
+    clearInterval(interval);
+    console.log(\`Total: \${currentData.length} points\`);
+  }
+}, 1000);`,
+        'incremental-monitor': `// Incremental Performance Monitor
+// getIncrementalState로 실시간 성능 모니터링
+
+const chart = createChart(container, { points: [] }, {
+  type: 'line',
+  title: 'Performance Monitor (getIncrementalState)',
+  width: 800,
+  height: 600,
+  colors: ['#3366ff'],
+  showGrid: true,
+});
+
+chart.setIncrementalOptions({
+  maxPoints: 1000,
+  frameBuffering: true
+});
+
+console.log('=== Incremental Performance Monitor ===');
+console.log('실시간 성능 지표 모니터링\\n');
+
+let time = 0;
+
+// 고빈도 데이터 추가 (50ms = 20 points/sec)
+const dataInterval = setInterval(() => {
+  time++;
+  chart.addPointsIncremental([{
+    x: time,
+    y: Math.sin(time / 20) * 50 + 50 + Math.random() * 5
+  }]);
+
+  if (time >= 600) {
+    clearInterval(dataInterval);
+    clearInterval(monitorInterval);
+    console.log('\\n=== Final Stats ===');
+    const finalState = chart.getIncrementalState();
+    console.log(\`Total Points: \${finalState.totalPoints}\`);
+    console.log(\`Total Frames: \${finalState.frameCount}\`);
+    console.log(\`Avg Frame Time: \${finalState.averageFrameTime.toFixed(2)}ms\`);
+  }
+}, 50);
+
+// 1초마다 성능 모니터링
+const monitorInterval = setInterval(() => {
+  const state = chart.getIncrementalState();
+
+  const fps = state.averageFrameTime > 0
+    ? Math.round(1000 / state.averageFrameTime)
+    : 0;
+
+  console.log(\`[Monitor] Points: \${state.totalPoints} | Pending: \${state.pendingPoints} | FPS: \${fps} | Paused: \${state.isPaused}\`);
+}, 1000);
+
+// 일시정지/재개 테스트 (10초에 일시정지, 15초에 재개)
+setTimeout(() => {
+  console.log('\\n>>> Pausing incremental rendering...');
+  chart.pauseIncremental();
+}, 10000);
+
+setTimeout(() => {
+  console.log('>>> Resuming incremental rendering...\\n');
+  chart.resumeIncremental();
+}, 15000);`,
       };
 
       // 커스텀 이벤트 발생시켜 Playground 컴포넌트에 전달

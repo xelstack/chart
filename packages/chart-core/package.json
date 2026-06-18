@@ -38,10 +38,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && rollup -c",
+    "build": "tsc && node scripts/fix-dts-paths.mjs && rollup -c",
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts",
     "test": "vitest",
+    "test:perf": "playwright test -c playwright.perf.config.ts",
     "test:e2e": "playwright test",
     "clean": "rm -rf dist"
   },
@@ -54,13 +55,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@rollup/plugin-alias": "^6.0.0",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-typescript": "^12.1.0",
     "@types/jsdom": "^27.0.0",
     "jsdom": "^27.2.0",
     "rollup": "^4.27.0",
+    "tsc-alias": "^1.8.16",
     "tslib": "^2.8.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }

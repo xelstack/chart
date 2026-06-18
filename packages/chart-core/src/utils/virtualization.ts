@@ -4,7 +4,7 @@
  * @module utils/virtualization
  */
 
-import type { DataPoint, Viewport } from '../types/index';
+import type { DataPoint, Viewport } from '@chart/types/index';
 
 /**
  * 가상화된 데이터셋
@@ -52,6 +52,11 @@ export function virtualizeDataset(
     };
   }
 
+  // maxVisiblePoints 방어: 0/음수/소수/비유한 입력으로 인한 빈 결과·Infinity step 방지
+  const cap = Number.isFinite(maxVisiblePoints)
+    ? Math.max(1, Math.floor(maxVisiblePoints))
+    : 1000;
+
   // 뷰포트 범위 내의 포인트 찾기
   const visibleIndices: number[] = [];
   
@@ -87,13 +92,13 @@ export function virtualizeDataset(
 
   // 최대 표시 개수 제한
   let visiblePoints: DataPoint[];
-  if (visibleIndices.length <= maxVisiblePoints) {
+  if (visibleIndices.length <= cap) {
     visiblePoints = visibleIndices.map(i => points[i]);
   } else {
     // 균등 샘플링
-    const step = visibleIndices.length / maxVisiblePoints;
+    const step = visibleIndices.length / cap;
     visiblePoints = [];
-    for (let i = 0; i < maxVisiblePoints; i++) {
+    for (let i = 0; i < cap; i++) {
       const index = Math.floor(i * step);
       visiblePoints.push(points[visibleIndices[index]]);
     }
@@ -150,6 +155,11 @@ export function calculateVirtualRange(
   scrollTop: number,
   overscan = 5
 ): { start: number; end: number; totalHeight: number } {
+  // itemHeight가 0/음수/비유한이면 나눗셈이 NaN/Infinity를 만들어 범위가 깨지므로 안전한 빈 범위 반환
+  if (!Number.isFinite(itemHeight) || itemHeight <= 0 || totalCount <= 0) {
+    return { start: 0, end: 0, totalHeight: 0 };
+  }
+
   const visibleCount = Math.ceil(viewportHeight / itemHeight);
   const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
   const end = Math.min(totalCount, start + visibleCount + overscan * 2);

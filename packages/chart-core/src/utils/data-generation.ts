@@ -4,7 +4,7 @@
  * @module utils/data-generation
  */
 
-import type { DataPoint, Dataset } from '../types/index';
+import type { DataPoint, Dataset } from '@chart/types/index';
 
 /**
  * 대용량 multi-series 데이터셋 생성 옵션

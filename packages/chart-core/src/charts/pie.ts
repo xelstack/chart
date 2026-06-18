@@ -3,7 +3,7 @@
  * @module charts/pie
  */
 
-import type { DataPoint } from '../types/index';
+import type { DataPoint } from '@chart/types/index';
 
 /**
  * 원형 그래프 렌더링 옵션
@@ -43,7 +43,6 @@ export function renderPieChart(
   }
 
   const colors = options.colors ?? ['#3366ff', '#ff3366', '#33ff66', '#ff6633', '#6633ff'];
-  const innerRadius = options.innerRadius ?? 0;
   const calculatedOuterRadius = Math.min(width, height) / 2 - 20;
 
   // 음수 반지름 방지
@@ -56,6 +55,10 @@ export function renderPieChart(
   if (outerRadius <= 0) {
     return; // 유효하지 않은 반지름
   }
+
+  // innerRadius를 [0, outerRadius) 범위로 클램프
+  // (inner >= outer면 도넛 경로가 뒤집혀 깨지고, 음수면 '> 0' 분기를 우회해 풀 파이로 잘못 그려짐)
+  const innerRadius = Math.max(0, Math.min(options.innerRadius ?? 0, outerRadius - 1));
 
   // 총합 계산
   let total = 0;

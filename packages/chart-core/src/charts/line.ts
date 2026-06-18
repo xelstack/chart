@@ -3,9 +3,9 @@
  * @module charts/line
  */
 
-import type { DataPoint, Viewport } from '../types/index';
-import { virtualizeDataset } from '../utils/virtualization';
-import { isLowPerformanceDevice } from '../utils/device-detection';
+import type { DataPoint, Viewport } from '@chart/types/index';
+import { virtualizeDataset } from '@chart/utils/virtualization';
+import { isLowPerformanceDevice } from '@chart/utils/device-detection';
 
 /**
  * 선 그래프 렌더링 옵션
@@ -66,12 +66,18 @@ export function renderLineChart(
 
   const xRange = viewport.xMax - viewport.xMin;
   const yRange = viewport.yMax - viewport.yMin;
+  // 범위가 0이거나 비유한이면 NaN/Infinity 좌표를 막기 위해 안전한 분모(1) 사용
+  const safeXRange = xRange === 0 || !Number.isFinite(xRange) ? 1 : xRange;
+  const safeYRange = yRange === 0 || !Number.isFinite(yRange) ? 1 : yRange;
 
   // 선 그리기
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth;
   ctx.beginPath();
 
+  // 인덱스가 아니라 "실제로 점이 찍혔는지" 여부로 moveTo/lineTo를 결정한다.
+  // (선두 NaN으로 인한 원점 잔선, 중간 NaN 구간을 잇는 잘못된 직선 방지)
+  let started = false;
   for (let i = 0; i < renderPoints.length; i++) {
     const point = renderPoints[i];
 
@@ -95,15 +101,23 @@ export function renderLineChart(
 
     const y = point.y;
 
-    if (Number.isNaN(y)) {
+    const canvasX = ((x - viewport.xMin) / safeXRange) * width;
+    const canvasY = height - ((y - viewport.yMin) / safeYRange) * height;
+
+    // 유한하지 않은 좌표(NaN/Infinity x·y)는 건너뛰고 경로를 끊는다
+    if (
+      !Number.isFinite(x) ||
+      !Number.isFinite(y) ||
+      !Number.isFinite(canvasX) ||
+      !Number.isFinite(canvasY)
+    ) {
+      started = false;
       continue;
     }
 
-    const canvasX = ((x - viewport.xMin) / xRange) * width;
-    const canvasY = height - ((y - viewport.yMin) / yRange) * height;
-
-    if (i === 0) {
+    if (!started) {
       ctx.moveTo(canvasX, canvasY);
+      started = true;
     } else {
       ctx.lineTo(canvasX, canvasY);
     }
@@ -137,12 +151,18 @@ export function renderLineChart(
 
       const y = point.y;
 
-      if (Number.isNaN(y)) {
+      const canvasX = ((x - viewport.xMin) / safeXRange) * width;
+      const canvasY = height - ((y - viewport.yMin) / safeYRange) * height;
+
+      // 유한하지 않은 좌표는 그리지 않음
+      if (
+        !Number.isFinite(x) ||
+        !Number.isFinite(y) ||
+        !Number.isFinite(canvasX) ||
+        !Number.isFinite(canvasY)
+      ) {
         continue;
       }
-
-      const canvasX = ((x - viewport.xMin) / xRange) * width;
-      const canvasY = height - ((y - viewport.yMin) / yRange) * height;
 
       ctx.beginPath();
       ctx.arc(canvasX, canvasY, pointRadius, 0, Math.PI * 2);

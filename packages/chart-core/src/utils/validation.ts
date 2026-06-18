@@ -3,7 +3,7 @@
  * @module utils/validation
  */
 
-import type { DataPoint, Dataset, ChartConfig, AxisConfig } from '../types/index';
+import type { DataPoint, Dataset, ChartConfig, AxisConfig } from '@chart/types/index';
 import { ValidationError } from './errors';
 
 /**
@@ -91,19 +91,22 @@ export function validateAxisConfig(axis: unknown): asserts axis is AxisConfig {
 
   const a = axis as Record<string, unknown>;
 
-  // min, max 검증
-  if (a.min !== undefined && a.max !== undefined) {
-    if (typeof a.min !== 'number' || typeof a.max !== 'number') {
-      throw new ValidationError('AxisConfig.min과 max는 number여야 합니다', 'axis');
+  // min, max 검증 (각 경계를 독립적으로 검증 - 한쪽만 지정해도 NaN/Infinity/비숫자를 차단)
+  if (a.min !== undefined) {
+    if (typeof a.min !== 'number' || !Number.isFinite(a.min)) {
+      throw new ValidationError('AxisConfig.min은 유한한 숫자여야 합니다', 'axis');
     }
+  }
 
-    if (!Number.isFinite(a.min) || !Number.isFinite(a.max)) {
-      throw new ValidationError('AxisConfig.min과 max는 유한한 숫자여야 합니다', 'axis');
+  if (a.max !== undefined) {
+    if (typeof a.max !== 'number' || !Number.isFinite(a.max)) {
+      throw new ValidationError('AxisConfig.max는 유한한 숫자여야 합니다', 'axis');
     }
+  }
 
-    if (a.min >= a.max) {
-      throw new ValidationError('AxisConfig.min은 max보다 작아야 합니다', 'axis');
-    }
+  // 두 경계가 모두 있을 때만 순서 검증
+  if (a.min !== undefined && a.max !== undefined && a.min >= a.max) {
+    throw new ValidationError('AxisConfig.min은 max보다 작아야 합니다', 'axis');
   }
 }
 

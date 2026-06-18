@@ -1,6 +1,7 @@
 {
   "name": "@chart/e2e-tests",
   "version": "1.0.0",
+  "type": "module",
   "description": "차트 라이브러리 E2E 테스트",
   "private": true,
   "scripts": {

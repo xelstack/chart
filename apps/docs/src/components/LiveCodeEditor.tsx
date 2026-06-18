@@ -45,10 +45,27 @@ export default function LiveCodeEditor({
       target: monaco.languages.typescript.ScriptTarget.ES2020,
       moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       module: monaco.languages.typescript.ModuleKind.ESNext,
-      lib: ['ES2020', 'DOM'],
       allowNonTsExtensions: true,
-      strict: true,
+      strict: false, // 플레이그라운드에서는 strict 모드 비활성화
       esModuleInterop: true,
+      noEmit: true,
+      allowJs: true,
+      checkJs: false,
+    });
+
+    // 진단 옵션 설정 - 일부 오류 무시
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+      // lib 관련 오류 무시
+      diagnosticCodesToIgnore: [
+        2304, // Cannot find name 'X' (Math, Array, Date 등)
+        2318, // Cannot find global type 'X'
+        2552, // Cannot find name 'X'. Did you mean 'Y'?
+        2580, // Cannot find name 'require'
+        2584, // Cannot find name 'console'
+        2339, // Property 'X' does not exist on type 'Y' (동적 속성)
+      ],
     });
 
     // @xelstack/chart-core 타입 정의 추가
@@ -79,6 +96,44 @@ export default function LiveCodeEditor({
           innerRadius?: number;
           showLabels?: boolean;
           showPercentage?: boolean;
+          realtime?: {
+            enabled?: boolean;
+            maxPoints?: number;
+          };
+        }
+
+        export interface AddPointsOptions {
+          autoRender?: boolean;
+          autoScroll?: boolean;
+        }
+
+        export interface IncrementalRenderOptions {
+          enabled?: boolean;
+          frameBuffering?: boolean;
+          maxPoints?: number;
+        }
+
+        export interface IncrementalAddPointsOptions {
+          autoRender?: boolean;
+          autoScroll?: boolean;
+        }
+
+        export interface IncrementalRenderState {
+          totalPoints: number;
+          pendingPoints: number;
+          frameCount: number;
+          averageFrameTime: number;
+          isPaused: boolean;
+          isActive: boolean;
+          isOffscreenValid: boolean;
+        }
+
+        export interface ChartState {
+          status: string;
+          pointCount: number;
+          dataset: Dataset;
+          viewport: Viewport;
+          config: ChartConfig;
         }
 
         export interface Viewport {
@@ -94,8 +149,20 @@ export default function LiveCodeEditor({
           updateConfig: (config: Partial<ChartConfig>) => void;
           render: () => void;
           destroy: () => void;
-          getData: () => Dataset;
-          getConfig: () => ChartConfig;
+          resize: (width: number, height: number) => void;
+          resetViewport: () => void;
+          setViewport: (viewport: Viewport) => void;
+          zoom: (factor: number, centerX?: number, centerY?: number) => void;
+          pan: (deltaX: number, deltaY: number) => void;
+          getViewport: () => Viewport;
+          getState: () => ChartState;
+          addPoints: (points: DataPoint[], options?: AddPointsOptions) => void;
+          addPointsIncremental: (points: DataPoint[], options?: IncrementalAddPointsOptions) => void;
+          updateDataIncremental: (nextData: DataPoint[]) => void;
+          getIncrementalState: () => IncrementalRenderState;
+          pauseIncremental: () => void;
+          resumeIncremental: () => void;
+          setIncrementalOptions: (options: Partial<IncrementalRenderOptions>) => void;
         }
 
         export function createChart(
@@ -114,39 +181,106 @@ export default function LiveCodeEditor({
       // 플레이그라운드 전역 변수
       declare const container: HTMLElement;
 
+      // 타입 정의
+      interface DataPoint {
+        x: number | Date | string;
+        y: number;
+        series?: string;
+      }
+
+      interface Dataset {
+        points: DataPoint[];
+      }
+
+      interface Viewport {
+        xMin: number;
+        xMax: number;
+        yMin: number;
+        yMax: number;
+        zoomLevel: number;
+      }
+
+      interface ChartConfig {
+        type: 'line' | 'bar' | 'pie' | 'scatter';
+        width?: number;
+        height?: number;
+        title?: string;
+        colors?: string[];
+        showGrid?: boolean;
+        lineWidth?: number;
+        pointRadius?: number;
+        barWidth?: number;
+        barGap?: number;
+        innerRadius?: number;
+        showLabels?: boolean;
+        showPercentage?: boolean;
+        realtime?: {
+          enabled?: boolean;
+          maxPoints?: number;
+        };
+      }
+
+      interface AddPointsOptions {
+        autoRender?: boolean;
+        autoScroll?: boolean;
+      }
+
+      interface IncrementalRenderOptions {
+        enabled?: boolean;
+        frameBuffering?: boolean;
+        maxPoints?: number;
+      }
+
+      interface IncrementalAddPointsOptions {
+        autoRender?: boolean;
+        autoScroll?: boolean;
+      }
+
+      interface IncrementalRenderState {
+        totalPoints: number;
+        pendingPoints: number;
+        frameCount: number;
+        averageFrameTime: number;
+        isPaused: boolean;
+        isActive: boolean;
+        isOffscreenValid: boolean;
+      }
+
+      interface ChartState {
+        status: string;
+        pointCount: number;
+        dataset: Dataset;
+        viewport: Viewport;
+        config: ChartConfig;
+      }
+
+      interface ChartHandle {
+        updateData: (dataset: Dataset) => void;
+        updateConfig: (config: Partial<ChartConfig>) => void;
+        render: () => void;
+        destroy: () => void;
+        resize: (width: number, height: number) => void;
+        resetViewport: () => void;
+        setViewport: (viewport: Viewport) => void;
+        zoom: (factor: number, centerX?: number, centerY?: number) => void;
+        pan: (deltaX: number, deltaY: number) => void;
+        getViewport: () => Viewport;
+        getState: () => ChartState;
+        addPoints: (points: DataPoint[], options?: AddPointsOptions) => void;
+        addPointsIncremental: (points: DataPoint[], options?: IncrementalAddPointsOptions) => void;
+        updateDataIncremental: (nextData: DataPoint[]) => void;
+        getIncrementalState: () => IncrementalRenderState;
+        pauseIncremental: () => void;
+        resumeIncremental: () => void;
+        setIncrementalOptions: (options: Partial<IncrementalRenderOptions>) => void;
+      }
+
       // createChart를 전역으로 사용 가능하도록 선언
       declare function createChart(
         container: HTMLElement,
-        dataset: {
-          points: Array<{
-            x: number | Date | string;
-            y: number;
-            series?: string;
-          }>;
-        },
-        config: {
-          type: 'line' | 'bar' | 'pie' | 'scatter';
-          width?: number;
-          height?: number;
-          title?: string;
-          colors?: string[];
-          showGrid?: boolean;
-          lineWidth?: number;
-          pointRadius?: number;
-          barWidth?: number;
-          barGap?: number;
-          innerRadius?: number;
-          showLabels?: boolean;
-          showPercentage?: boolean;
-        }
-      ): {
-        updateData: (dataset: any) => void;
-        updateConfig: (config: any) => void;
-        render: () => void;
-        destroy: () => void;
-        getData: () => any;
-        getConfig: () => any;
-      };
+        dataset: Dataset,
+        config: ChartConfig
+      ): ChartHandle;
       `,
       'ts:playground-globals.d.ts'
     );

@@ -4,7 +4,7 @@
  * @module utils/data-transforms
  */
 
-import type { DataPoint } from '../types/index';
+import type { DataPoint } from '@chart/types/index';
 import { pipe } from './fp/pipe';
 
 /**

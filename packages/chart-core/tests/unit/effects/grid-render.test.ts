@@ -77,4 +77,15 @@ describe('renderGrid', () => {
     expect(moveToCalls.length).toBeGreaterThan(0);
     expect(lineToCalls.length).toBeGreaterThan(0);
   });
+
+  // 회귀: 높이가 타이틀 오프셋보다 작으면 음수 chartHeight로 뒤집힌 그리드가 그려지던 문제
+  it('should not draw when title offset leaves no usable chart area', () => {
+    const strokeSpy = vi.spyOn(ctx, 'stroke');
+    const moveToSpy = vi.spyOn(ctx, 'moveTo');
+
+    renderGrid(ctx, 800, 30, 50); // height(30) < titleOffset(50)
+
+    expect(strokeSpy).not.toHaveBeenCalled();
+    expect(moveToSpy).not.toHaveBeenCalled();
+  });
 });

@@ -4,11 +4,11 @@
  * @module effects/canvas-render
  */
 
-import type { Dataset, ChartConfig, Viewport, DataPoint } from '../types/index';
-import { renderLineChart } from '../charts/line';
-import { renderBarChart } from '../charts/bar';
-import { renderPieChart } from '../charts/pie';
-import { renderScatterChart } from '../charts/scatter';
+import type { Dataset, ChartConfig, Viewport, DataPoint } from '@chart/types/index';
+import { renderLineChart } from '@chart/charts/line';
+import { renderBarChart } from '@chart/charts/bar';
+import { renderPieChart } from '@chart/charts/pie';
+import { renderScatterChart } from '@chart/charts/scatter';
 
 /**
  * 렌더링 결과
@@ -56,6 +56,23 @@ const groupPointsBySeries = (points: DataPoint[]) => {
 };
 
 /**
+ * 시리즈 색상 매핑을 데이터 순서와 무관하게 결정적(deterministic)으로 만들기 위해
+ * 시리즈 키를 안정적인 순서로 정렬한다.
+ * - 이름이 있는 시리즈는 사전순 정렬 → 데이터 입력 순서가 바뀌어도 같은 색
+ * - series가 없는(undefined) 버킷은 마지막에 배치 → 이름 있는 시리즈의 색을 밀지 않음
+ */
+const orderedSeriesEntries = (
+  seriesMap: Map<string | undefined, DataPoint[]>
+): [string | undefined, DataPoint[]][] => {
+  const keys = [...seriesMap.keys()];
+  const named = keys.filter((k): k is string => k !== undefined).sort();
+  const orderedKeys: (string | undefined)[] = seriesMap.has(undefined)
+    ? [...named, undefined]
+    : named;
+  return orderedKeys.map((key) => [key, seriesMap.get(key) ?? []]);
+};
+
+/**
  * 카테고리형 x 값을 숫자 인덱스로 매핑하는 헬퍼 함수
  * Multi-series에서 같은 카테고리가 같은 위치에 오도록 보장
  */
@@ -83,27 +100,23 @@ const getChartRenderer = (type: string): ChartRendererFn => {
       const categoryMap = createCategoryIndexMap(dataset.points);
       const colors = config.colors ?? ['#3366ff'];
 
-      let colorIndex = 0;
-      for (const [, points] of seriesMap) {
+      orderedSeriesEntries(seriesMap).forEach(([, points], colorIndex) => {
         renderLineChart(ctx, points, viewport, width, height, {
           color: colors[colorIndex % colors.length],
           categoryMap,
         });
-        colorIndex++;
-      }
+      });
     },
     bar: (ctx, dataset, viewport, width, height, config) => {
       // Multi-series 지원: 시리즈별로 그룹화하여 렌더링
       const seriesMap = groupPointsBySeries(dataset.points);
       const colors = config.colors ?? ['#3366ff'];
 
-      let colorIndex = 0;
-      for (const [, points] of seriesMap) {
+      orderedSeriesEntries(seriesMap).forEach(([, points], colorIndex) => {
         renderBarChart(ctx, points, viewport, width, height, {
           color: colors[colorIndex % colors.length],
         });
-        colorIndex++;
-      }
+      });
     },
     pie: (ctx, dataset, _viewport, width, height, config) => {
       renderPieChart(ctx, dataset.points, width, height, {
@@ -115,13 +128,11 @@ const getChartRenderer = (type: string): ChartRendererFn => {
       const seriesMap = groupPointsBySeries(dataset.points);
       const colors = config.colors ?? ['#3366ff'];
 
-      let colorIndex = 0;
-      for (const [, points] of seriesMap) {
+      orderedSeriesEntries(seriesMap).forEach(([, points], colorIndex) => {
         renderScatterChart(ctx, points, viewport, width, height, {
           color: colors[colorIndex % colors.length],
         });
-        colorIndex++;
-      }
+      });
     },
   };
 
@@ -167,6 +178,12 @@ export function renderGrid(
   height: number,
   titleOffset: number
 ) {
+  // 사용 가능한 차트 영역이 없으면(타이틀이 높이를 넘어서거나 너비가 0 이하) 그리지 않음
+  // (음수 chartHeight로 인한 뒤집힌/겹치는 그리드 라인 방지)
+  if (height - titleOffset <= 0 || width <= 0) {
+    return;
+  }
+
   ctx.save();
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
   ctx.lineWidth = 1;
@@ -216,6 +233,11 @@ export function renderToCanvas(
   const width = config.width ?? ctx.canvas.clientWidth;
   const height = config.height ?? ctx.canvas.clientHeight;
 
+  // 크기가 0 이하(분리된/숨겨진 캔버스 등)면 좌표 계산이 깨지므로 렌더하지 않음
+  if (width <= 0 || height <= 0) {
+    return { rendered: false, timestamp: performance.now() };
+  }
+
   // 배경 클리어 (논리적 좌표 사용, context가 이미 scale됨)
   ctx.clearRect(0, 0, width, height);
 
@@ -244,6 +266,99 @@ export function renderToCanvas(
 
   return {
     rendered: true,
+    timestamp: performance.now(),
+  };
+}
+
+/**
+ * 증분 렌더링 결과
+ */
+export interface IncrementalRenderResult {
+  rendered: boolean;
+  pointsRendered: number;
+  timestamp?: number;
+}
+
+/**
+ * 새로운 데이터 포인트만 오프스크린 캔버스에 렌더링하는 함수
+ * 기존 렌더링 결과를 보존하고 새 데이터만 추가로 그립니다.
+ *
+ * @param ctx 오프스크린 Canvas 렌더링 컨텍스트
+ * @param newPoints 새로 추가할 데이터 포인트
+ * @param config 차트 설정
+ * @param viewport 뷰포트 정보
+ * @returns 증분 렌더링 결과
+ */
+export function renderIncrementalToCanvas(
+  ctx: CanvasRenderingContext2D,
+  newPoints: readonly DataPoint[],
+  config: ChartConfig,
+  viewport: Viewport
+): IncrementalRenderResult {
+  if (newPoints.length === 0) {
+    return {
+      rendered: false,
+      pointsRendered: 0,
+    };
+  }
+
+  const width = config.width ?? ctx.canvas.clientWidth;
+  const height = config.height ?? ctx.canvas.clientHeight;
+
+  // 크기가 0 이하면 좌표 계산이 깨지므로 렌더하지 않음
+  if (width <= 0 || height <= 0) {
+    return { rendered: false, pointsRendered: 0 };
+  }
+
+  // 타이틀 오프셋 계산
+  const title = (config as { title?: string }).title;
+  const titleHeight = typeof title === 'string' && title.length > 0 ? 50 : 0;
+  const chartHeight = height - titleHeight;
+
+  // Canvas context를 타이틀 오프셋만큼 이동
+  ctx.save();
+  ctx.translate(0, titleHeight);
+
+  // 새 데이터 포인트만 렌더링
+  // 차트 타입에 따라 적절한 렌더러 사용
+  const colors = config.colors ?? ['#3366ff'];
+
+  // 시리즈별로 그룹화
+  const seriesMap = groupPointsBySeries([...newPoints]);
+  const categoryMap = createCategoryIndexMap([...newPoints]);
+
+  orderedSeriesEntries(seriesMap).forEach(([, points], colorIndex) => {
+    switch (config.type) {
+      case 'line':
+        renderLineChart(ctx, points, viewport, width, chartHeight, {
+          color: colors[colorIndex % colors.length],
+          categoryMap,
+        });
+        break;
+      case 'bar':
+        renderBarChart(ctx, points, viewport, width, chartHeight, {
+          color: colors[colorIndex % colors.length],
+        });
+        break;
+      case 'scatter':
+        renderScatterChart(ctx, points, viewport, width, chartHeight, {
+          color: colors[colorIndex % colors.length],
+        });
+        break;
+      default:
+        // 기본값: line chart
+        renderLineChart(ctx, points, viewport, width, chartHeight, {
+          color: colors[colorIndex % colors.length],
+          categoryMap,
+        });
+    }
+  });
+
+  ctx.restore();
+
+  return {
+    rendered: true,
+    pointsRendered: newPoints.length,
     timestamp: performance.now(),
   };
 }

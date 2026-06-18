@@ -43,6 +43,15 @@ describe('sampling', () => {
 
       expect(sampled[sampled.length - 1]).toEqual(points[points.length - 1]);
     });
+
+    // 회귀: targetCount === 1일 때 첫 포인트 대신 마지막 포인트만 반환하던 문제
+    it('targetCount가 1이면 첫 포인트를 반환해야 함', () => {
+      const points: DataPoint[] = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i }));
+      const sampled = uniformSample(points, 1);
+
+      expect(sampled).toHaveLength(1);
+      expect(sampled[0]).toEqual(points[0]);
+    });
   });
 
   describe('filterByViewport', () => {
@@ -118,6 +127,40 @@ describe('sampling', () => {
       const sampled = adaptiveSample(points, 5, 100, 200);
 
       expect(sampled.length).toBeGreaterThan(0);
+    });
+
+    it('정확히 targetCount개를 반환해야 함', () => {
+      const points: DataPoint[] = Array.from({ length: 200 }, (_, i) => ({ x: i, y: i }));
+      const sampled = adaptiveSample(points, 20);
+
+      expect(sampled).toHaveLength(20);
+      expect(sampled[0]).toEqual(points[0]);
+      expect(sampled[sampled.length - 1]).toEqual(points[points.length - 1]);
+    });
+
+    it('targetCount가 1이면 첫 포인트를 반환해야 함', () => {
+      const points: DataPoint[] = Array.from({ length: 10 }, (_, i) => ({ x: i, y: i }));
+      const sampled = adaptiveSample(points, 1);
+
+      expect(sampled).toHaveLength(1);
+      expect(sampled[0]).toEqual(points[0]);
+    });
+
+    // 회귀: densityMap을 계산만 하고 사용하지 않아 균등 샘플링과 동일하던 문제
+    it('밀도가 높은(변화가 큰) 구간에서 더 많이 샘플링해야 함', () => {
+      // 전반부(0~99)는 평탄, 후반부(100~199)는 변화가 큼
+      const points: DataPoint[] = [];
+      for (let i = 0; i < 100; i++) points.push({ x: i, y: 0 });
+      for (let i = 100; i < 200; i++) points.push({ x: i, y: (i % 2 === 0 ? 1000 : -1000) });
+
+      const sampled = adaptiveSample(points, 40);
+      expect(sampled).toHaveLength(40);
+
+      const inDenseRegion = sampled.filter((p) => (p.x as number) >= 100).length;
+      const inFlatRegion = sampled.filter((p) => (p.x as number) < 100).length;
+
+      // 밀도가 높은 후반부가 균등 분할(절반)보다 더 많이 샘플링되어야 함
+      expect(inDenseRegion).toBeGreaterThan(inFlatRegion);
     });
   });
 });

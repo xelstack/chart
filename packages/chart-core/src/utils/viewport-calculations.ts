@@ -4,7 +4,7 @@
  * @module utils/viewport-calculations
  */
 
-import type { Viewport, DataPoint } from '../types/index';
+import type { Viewport, DataPoint } from '@chart/types/index';
 import { pipe } from './fp/pipe';
 
 /**
@@ -97,6 +97,11 @@ export function calculateZoomedViewport(
   centerX?: number,
   centerY?: number
 ): Viewport {
+  // 유효하지 않은 배율(0, 음수, NaN, Infinity)은 뷰포트를 손상시키므로 무시하고 원본 복사본 반환
+  if (!Number.isFinite(factor) || factor <= 0) {
+    return { ...viewport };
+  }
+
   const cx = centerX ?? (viewport.xMin + viewport.xMax) / 2;
   const cy = centerY ?? (viewport.yMin + viewport.yMax) / 2;
 

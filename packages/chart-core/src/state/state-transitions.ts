@@ -1,4 +1,4 @@
-import type { ChartState } from '../types/index';
+import type { ChartState } from '@chart/types/index';
 import {
   createChartState,
   setStatus,

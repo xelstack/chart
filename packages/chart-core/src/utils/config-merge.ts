@@ -4,7 +4,7 @@
  * @module utils/config-merge
  */
 
-import type { ChartConfig } from '../types/index';
+import type { ChartConfig } from '@chart/types/index';
 
 /**
  * 설정 병합 (얕은 병합)

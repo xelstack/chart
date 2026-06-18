@@ -88,6 +88,21 @@ describe('virtualization', () => {
       expect(result.visiblePoints.length).toBe(0);
       expect(result.totalCount).toBe(2);
     });
+
+    // 회귀: maxVisiblePoints가 0/음수/비유한일 때 빈 결과를 반환하던 문제
+    it.each([0, -1, NaN, Infinity])(
+      'maxVisiblePoints가 %s여도 보이는 범위가 있으면 최소 1개 이상 반환해야 함',
+      (maxVisiblePoints) => {
+        const points: DataPoint[] = Array.from({ length: 50 }, (_, i) => ({ x: i, y: i }));
+        const viewport: Viewport = { xMin: 0, xMax: 50, yMin: 0, yMax: 50, zoomLevel: 1.0 };
+
+        const result = virtualizeDataset(points, viewport, maxVisiblePoints as number);
+
+        expect(result.visiblePoints.length).toBeGreaterThanOrEqual(1);
+        // 마지막 포인트가 항상 포함되어야 함
+        expect(result.visiblePoints).toContainEqual(points[result.endIndex]);
+      }
+    );
   });
 
   describe('chunkDataset', () => {
@@ -140,6 +155,18 @@ describe('virtualization', () => {
       // overscan으로 인해 시작 인덱스가 조정되어야 함
       expect(result.start).toBeLessThan(Math.floor(1000 / 50));
     });
+
+    // 회귀: itemHeight가 0/음수/비유한일 때 NaN/Infinity 범위를 반환하던 문제
+    it.each([0, -50, NaN, Infinity])(
+      'itemHeight가 %s이면 안전한 빈 범위를 반환해야 함',
+      (itemHeight) => {
+        const result = calculateVirtualRange(1000, 500, itemHeight as number, 100, 5);
+
+        expect(result).toEqual({ start: 0, end: 0, totalHeight: 0 });
+        expect(Number.isNaN(result.start)).toBe(false);
+        expect(Number.isNaN(result.end)).toBe(false);
+      }
+    );
   });
 });
 

@@ -3,7 +3,7 @@
  * @module charts/bar
  */
 
-import type { DataPoint, Viewport } from '../types/index';
+import type { DataPoint, Viewport } from '@chart/types/index';
 
 /**
  * 막대 그래프 렌더링 옵션
@@ -34,7 +34,7 @@ export function renderBarChart(
   width: number,
   height: number,
   options: BarChartOptions = {}
-): void {
+) {
   if (points.length === 0) {
     return;
   }
@@ -45,7 +45,10 @@ export function renderBarChart(
 
   const xRange = viewport.xMax - viewport.xMin;
   const yRange = viewport.yMax - viewport.yMin;
-  const zeroY = height - ((0 - viewport.yMin) / yRange) * height;
+  // 범위가 0이거나 비유한이면 NaN/Infinity 좌표를 막기 위해 안전한 분모(1) 사용
+  const safeXRange = xRange === 0 || !Number.isFinite(xRange) ? 1 : xRange;
+  const safeYRange = yRange === 0 || !Number.isFinite(yRange) ? 1 : yRange;
+  const zeroY = height - ((0 - viewport.yMin) / safeYRange) * height;
 
   // 막대 너비 계산
   const totalBarWidth = width / points.length;
@@ -71,12 +74,13 @@ export function renderBarChart(
 
     const y = point.y;
 
-    if (Number.isNaN(y)) {
+    const canvasX = ((x - viewport.xMin) / safeXRange) * width;
+    const canvasY = height - ((y - viewport.yMin) / safeYRange) * height;
+
+    // 유한하지 않은 좌표는 건너뜀
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(canvasX) || !Number.isFinite(canvasY)) {
       continue;
     }
-
-    const canvasX = ((x - viewport.xMin) / xRange) * width;
-    const canvasY = height - ((y - viewport.yMin) / yRange) * height;
 
     const barX = canvasX - barWidthPx / 2;
     const barHeight = Math.abs(canvasY - zeroY);

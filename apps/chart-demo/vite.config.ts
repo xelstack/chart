@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,6 +14,12 @@ export default defineConfig({
     strictPort: true, // 포트가 사용 중이면 실패
   },
   plugins: [
+    // chart-core 소스가 쓰는 @chart/* 경로 별칭을 tsconfig의 paths에서 그대로 해석
+    tsconfigPaths({
+      projects: [
+        path.resolve(__dirname, '../../packages/chart-core/tsconfig.json'),
+      ],
+    }),
     // E2E 테스트용 index.html을 루트 경로에서 제공
     {
       name: 'e2e-test-index',
@@ -47,6 +54,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // 워크스페이스 패키지를 빌드된 dist 대신 소스로 직접 해석 (HMR용)
       '@xelstack/chart-core': path.resolve(__dirname, '../../packages/chart-core/src'),
     },
   },

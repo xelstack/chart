@@ -3,7 +3,7 @@
  * DOM 요소를 생성하고 수정하는 사이드 이펙트 함수들
  * @module effects/dom-manipulation
  */
-import { getDeviceInfo } from '../utils/device-detection';
+import { getDeviceInfo } from '@chart/utils/device-detection';
 
 /**
  * Canvas 요소를 생성하고 컨테이너에 추가하는 사이드 이펙트 함수

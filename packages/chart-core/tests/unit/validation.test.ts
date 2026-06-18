@@ -146,7 +146,7 @@ describe('validation', () => {
         max: 100,
       };
       expect(() => validateAxisConfig(axis)).toThrow(ValidationError);
-      expect(() => validateAxisConfig(axis)).toThrow('AxisConfig.min과 max는 number여야 합니다');
+      expect(() => validateAxisConfig(axis)).toThrow('AxisConfig.min은 유한한 숫자여야 합니다');
     });
 
     it('should reject NaN min/max', () => {
@@ -165,6 +165,22 @@ describe('validation', () => {
       };
       expect(() => validateAxisConfig(axis)).toThrow(ValidationError);
       expect(() => validateAxisConfig(axis)).toThrow('AxisConfig.min은 max보다 작아야 합니다');
+    });
+
+    // 회귀: min/max 둘 다 있을 때만 검증해 한쪽만 지정된 잘못된 값이 통과하던 문제
+    it('should reject a single invalid min even when max is omitted', () => {
+      expect(() => validateAxisConfig({ min: NaN })).toThrow(ValidationError);
+      expect(() => validateAxisConfig({ min: Infinity })).toThrow('AxisConfig.min은 유한한 숫자여야 합니다');
+    });
+
+    it('should reject a single invalid max even when min is omitted', () => {
+      expect(() => validateAxisConfig({ max: 'oops' })).toThrow(ValidationError);
+      expect(() => validateAxisConfig({ max: NaN })).toThrow('AxisConfig.max는 유한한 숫자여야 합니다');
+    });
+
+    it('should accept a single valid bound', () => {
+      expect(() => validateAxisConfig({ min: 0 })).not.toThrow();
+      expect(() => validateAxisConfig({ max: 100 })).not.toThrow();
     });
   });
 

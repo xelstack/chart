@@ -23,6 +23,7 @@ export const navigation: NavSection[] = [
     items: [
       { title: 'createChart', href: '/api/create-chart' },
       { title: 'ChartHandle', href: '/api/chart-handle' },
+      { title: 'Streaming', href: '/api/streaming' },
       { title: 'Types', href: '/api/types' },
       { title: 'Utilities', href: '/api/utilities' },
     ],

@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { code, lang = 'typescript', title, showLineNumbers = false } = Astro.props;
-const lines = code.trim().split('\n');
+const _lines = code.trim().split('\n'); // 향후 줄 번호 표시에 사용 예정
 ---
 
 <div class="code-block-wrapper my-6">

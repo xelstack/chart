@@ -4,7 +4,7 @@
  * @module utils/sampling
  */
 
-import type { DataPoint } from '../types/index';
+import type { DataPoint } from '@chart/types/index';
 
 /**
  * 데이터 포인트 배열을 지정된 개수로 균등 샘플링합니다.
@@ -26,6 +26,11 @@ export function uniformSample(points: DataPoint[], targetCount: number): DataPoi
 
   if (points.length <= targetCount) {
     return [...points];
+  }
+
+  // targetCount === 1: 첫 포인트를 대표로 반환 (마지막-포인트 덮어쓰기로 첫 포인트가 사라지는 버그 방지)
+  if (targetCount === 1) {
+    return [points[0]];
   }
 
   const step = points.length / targetCount;
@@ -126,30 +131,56 @@ export function adaptiveSample(
     }
   }
 
-  // 데이터 밀도 계산 (변화율 기반)
-  const densityMap = new Map<number, number>();
-  for (let i = 1; i < filteredPoints.length; i++) {
-    const prev = filteredPoints[i - 1];
-    const curr = filteredPoints[i];
-    const xDiff = toNumber(curr.x) - toNumber(prev.x);
-    const yDiff = Math.abs(curr.y - prev.y);
-    const density = yDiff / (xDiff || 1);
-    densityMap.set(i, density);
+  const n = filteredPoints.length;
+
+  // 필터링 후 데이터가 목표 개수 이하이면 그대로 반환
+  if (n <= targetCount) {
+    return [...filteredPoints];
   }
 
-  // 밀도가 높은 구간은 더 많이 샘플링
+  // targetCount === 1: 첫 포인트를 대표로 반환
+  if (targetCount === 1) {
+    return [filteredPoints[0]];
+  }
+
+  // 데이터 밀도 계산 (변화율 기반): 변화가 큰 구간일수록 가중치가 높음
+  const densities = new Array<number>(n).fill(0);
+  let maxDensity = 0;
+  for (let i = 1; i < n; i++) {
+    const xDiff = toNumber(filteredPoints[i].x) - toNumber(filteredPoints[i - 1].x);
+    const yDiff = Math.abs(filteredPoints[i].y - filteredPoints[i - 1].y);
+    const density = yDiff / (Math.abs(xDiff) || 1);
+    densities[i] = Number.isFinite(density) ? density : 0;
+    if (densities[i] > maxDensity) {
+      maxDensity = densities[i];
+    }
+  }
+
+  // 가중치 = 기본 1 + 정규화된 밀도(0~1). 평탄한 구간도 최소한 샘플링되고,
+  // 밀도가 높은 구간은 누적 가중치가 빠르게 커져 더 많은 샘플이 배정됨.
+  const cumulative = new Array<number>(n);
+  let acc = 0;
+  for (let i = 0; i < n; i++) {
+    const weight = 1 + (maxDensity > 0 ? densities[i] / maxDensity : 0);
+    acc += weight;
+    cumulative[i] = acc;
+  }
+  const totalWeight = acc;
+
+  // 누적 가중치를 균등 분할하여 역-CDF 샘플링 (밀도 비례 배분)
   const sampled: DataPoint[] = [];
-  const step = filteredPoints.length / targetCount;
-
-  for (let i = 0; i < targetCount; i++) {
-    const index = Math.floor(i * step);
-    sampled.push(filteredPoints[index]);
+  let searchIndex = 0;
+  for (let k = 0; k < targetCount; k++) {
+    const target = ((k + 1) / targetCount) * totalWeight;
+    while (searchIndex < n - 1 && cumulative[searchIndex] < target) {
+      searchIndex++;
+    }
+    sampled.push(filteredPoints[searchIndex]);
   }
 
-  // 마지막 포인트는 항상 포함
-  if (sampled[sampled.length - 1] !== filteredPoints[filteredPoints.length - 1]) {
-    sampled[sampled.length - 1] = filteredPoints[filteredPoints.length - 1];
-  }
+  // 첫/마지막 포인트는 항상 포함
+  sampled[0] = filteredPoints[0];
+  sampled[sampled.length - 1] = filteredPoints[n - 1];
 
   return sampled;
 }

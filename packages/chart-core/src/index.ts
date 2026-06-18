@@ -89,3 +89,47 @@ export type { ScatterChartOptions } from './charts/scatter';
 // 에러 클래스 export
 export { ValidationError, ChartTypeError } from './utils/errors';
 
+// 스트리밍/증분 렌더링 모듈 export (T038-T040)
+export {
+  createDataBuffer,
+  createRenderQueue,
+  calculateDelta,
+  createDeltaCalculator,
+  createFrameScheduler,
+} from './streaming/index';
+
+export type {
+  // DataBuffer
+  CreateDataBufferOptions,
+  DataBufferState,
+  DataBuffer,
+  // RenderQueue
+  CreateRenderQueueOptions,
+  RenderQueueState,
+  RenderQueue,
+  // DeltaResult
+  DeltaResult,
+  DeltaType,
+  CalculateDeltaOptions,
+  DeltaCalculator,
+  CreateDeltaCalculatorOptions,
+  // FrameScheduler
+  CreateFrameSchedulerOptions,
+  FrameSchedulerState,
+  FrameScheduler,
+  // 통합 상태
+  IncrementalRenderingState,
+} from './streaming/index';
+
+// 증분 렌더링 타입 export
+export type {
+  IncrementalRenderOptions,
+  IncrementalAddPointsOptions,
+  IncrementalRenderState,
+  IncrementalChartHandle,
+} from './types/incremental';
+
+// 증분 렌더링 함수 export
+export { renderIncrementalToCanvas } from './effects/canvas-render';
+export type { IncrementalRenderResult } from './effects/canvas-render';
+

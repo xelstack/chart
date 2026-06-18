@@ -3,9 +3,9 @@
  * @module charts/scatter
  */
 
-import type { DataPoint, Viewport } from '../types/index';
-import { virtualizeDataset } from '../utils/virtualization';
-import { isLowPerformanceDevice } from '../utils/device-detection';
+import type { DataPoint, Viewport } from '@chart/types/index';
+import { virtualizeDataset } from '@chart/utils/virtualization';
+import { isLowPerformanceDevice } from '@chart/utils/device-detection';
 
 /**
  * 산점도 렌더링 옵션
@@ -59,6 +59,9 @@ export function renderScatterChart(
 
   const xRange = viewport.xMax - viewport.xMin;
   const yRange = viewport.yMax - viewport.yMin;
+  // 범위가 0이거나 비유한이면 NaN/Infinity 좌표를 막기 위해 안전한 분모(1) 사용
+  const safeXRange = xRange === 0 || !Number.isFinite(xRange) ? 1 : xRange;
+  const safeYRange = yRange === 0 || !Number.isFinite(yRange) ? 1 : yRange;
 
   ctx.fillStyle = color;
   ctx.globalAlpha = opacity;
@@ -80,12 +83,13 @@ export function renderScatterChart(
 
     const y = point.y;
 
-    if (Number.isNaN(y)) {
+    const canvasX = ((x - viewport.xMin) / safeXRange) * width;
+    const canvasY = height - ((y - viewport.yMin) / safeYRange) * height;
+
+    // 유한하지 않은 좌표는 건너뜀
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(canvasX) || !Number.isFinite(canvasY)) {
       continue;
     }
-
-    const canvasX = ((x - viewport.xMin) / xRange) * width;
-    const canvasY = height - ((y - viewport.yMin) / yRange) * height;
 
     ctx.beginPath();
     ctx.arc(canvasX, canvasY, pointRadius, 0, Math.PI * 2);
@@ -94,4 +98,3 @@ export function renderScatterChart(
 
   ctx.globalAlpha = 1.0;
 }
-

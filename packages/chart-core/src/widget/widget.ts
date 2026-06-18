@@ -4,8 +4,8 @@
  * @module widget/widget
  */
 
-import { createChart } from '../api/create-chart';
-import type { ChartHandle } from '../api/chart-handle';
+import { createChart } from '@chart/api/create-chart';
+import type { ChartHandle } from '@chart/api/chart-handle';
 import type {
   Dataset,
   ChartConfig,
@@ -13,7 +13,7 @@ import type {
   Viewport,
   WidgetConfig,
   WidgetInstance,
-} from '../types/index';
+} from '@chart/types/index';
 
 /**
  * 위젯 설정 타입 가드
@@ -67,12 +67,22 @@ export function createWidget(config: WidgetConfig): WidgetInstance {
     throw new Error('WidgetConfig는 필수입니다');
   }
 
-  // 타입 가드를 통한 안전한 속성 접근
-  const validatedConfig = isValidWidgetConfig(config) ? config : (config as WidgetConfig);
+  // 타입 가드를 통한 검증: 유효하지 않으면 깊은 곳에서 크래시하지 않고 명확한 에러로 거부
+  if (!isValidWidgetConfig(config)) {
+    throw new Error(
+      '유효하지 않은 WidgetConfig입니다 (container는 HTMLElement, dataset과 chartConfig는 필수입니다)'
+    );
+  }
+
+  const validatedConfig = config;
   const widgetId = validatedConfig.id ?? `widget-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   const widgetContainer = validatedConfig.container;
   const widgetDataset = validatedConfig.dataset;
-  const widgetChartConfig = validatedConfig.chartConfig;
+  // autoResize(기본 true)를 차트의 responsive 옵션으로 매핑하여 ResizeObserver 설치 여부를 제어
+  const widgetChartConfig: Partial<ChartConfig> = {
+    ...validatedConfig.chartConfig,
+    responsive: validatedConfig.autoResize !== false,
+  };
 
   // 함수형 차트 생성
   const chartHandle: ChartHandle = createChart(widgetContainer, widgetDataset, widgetChartConfig);
@@ -111,16 +121,10 @@ export function createWidget(config: WidgetConfig): WidgetInstance {
 
     /**
      * 위젯의 현재 상태를 반환합니다.
+     * 핸들의 실시간 상태를 위임하여 updateData/addPoints 후에도 정확한 pointCount를 반환합니다.
      * @returns 차트 상태
      */
-    getState: (): ChartState => {
-      // 함수형 API에서는 상태를 직접 노출하지 않으므로
-      // 기본 상태 객체 반환
-      return {
-        status: 'ready',
-        pointCount: widgetDataset.points.length,
-      };
-    },
+    getState: (): ChartState => chartHandle.getState(),
 
     /**
      * 위젯의 현재 뷰포트 정보를 반환합니다.

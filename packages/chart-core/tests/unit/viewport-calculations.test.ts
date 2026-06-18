@@ -154,6 +154,32 @@ describe('viewport-calculations', () => {
       expect(zoomed).not.toBe(viewport); // 새로운 객체
       expect(viewport.zoomLevel).toBe(1.0); // 원본은 변경되지 않음
     });
+
+    // 회귀: factor가 0/음수/NaN/Infinity일 때 뷰포트가 손상되던 문제
+    it.each([0, -2, NaN, Infinity, -Infinity])(
+      '유효하지 않은 factor(%s)에 대해 유한하고 손상되지 않은 뷰포트를 반환해야 함',
+      (factor) => {
+        const viewport: Viewport = {
+          xMin: 0,
+          xMax: 100,
+          yMin: 0,
+          yMax: 100,
+          zoomLevel: 1.0,
+        };
+
+        const result = calculateZoomedViewport(viewport, factor);
+
+        expect(Number.isFinite(result.xMin)).toBe(true);
+        expect(Number.isFinite(result.xMax)).toBe(true);
+        expect(Number.isFinite(result.yMin)).toBe(true);
+        expect(Number.isFinite(result.yMax)).toBe(true);
+        expect(result.xMin).toBeLessThan(result.xMax); // 축이 뒤집히지 않음
+        expect(result.yMin).toBeLessThan(result.yMax);
+        // 입력과 동일한 경계 + 새로운 객체
+        expect(result).toEqual(viewport);
+        expect(result).not.toBe(viewport);
+      }
+    );
   });
 
   describe('calculatePannedViewport', () => {

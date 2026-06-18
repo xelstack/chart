@@ -3,6 +3,14 @@
  * @module types
  */
 
+// 증분 렌더링 타입 re-export (T040)
+export type {
+  IncrementalRenderOptions,
+  IncrementalAddPointsOptions,
+  IncrementalRenderState,
+  IncrementalChartHandle,
+} from './incremental';
+
 /**
  * 차트 타입
  */
@@ -129,6 +137,8 @@ export interface ChartConfig {
   interaction?: InteractionConfig;
   /** 실시간 차트 설정 (선택) */
   realtime?: RealtimeConfig;
+  /** 컨테이너 크기에 자동 반응(ResizeObserver) 여부 (기본값: true) */
+  responsive?: boolean;
 }
 
 /**

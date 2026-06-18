@@ -1,0 +1,450 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Streaming API
+description: 실시간 차트를 위한 저수준 스트리밍 API
+---
+
+# Streaming API
+
+XelStack Chart의 저수준 스트리밍 API입니다. 일반적으로 `ChartHandle`의 증분 렌더링 메서드를 사용하면 되지만, 고급 사용 사례에서는 이 API를 직접 사용할 수 있습니다.
+
+## 개요
+
+스트리밍 모듈은 네 가지 핵심 컴포넌트로 구성됩니다:
+
+| 컴포넌트 | 역할 |
+|---------|------|
+| **DataBuffer** | 현재 데이터와 대기 데이터 관리 |
+| **RenderQueue** | 렌더링 대기열 관리 |
+| **FrameScheduler** | requestAnimationFrame 기반 프레임 스케줄링 |
+| **DeltaCalculator** | 두 데이터 상태 간 변경분 계산 |
+
+```typescript
+import {
+  createDataBuffer,
+  createRenderQueue,
+  createFrameScheduler,
+  calculateDelta,
+  createDeltaCalculator
+} from '@xelstack/chart-core';
+```
+
+---
+
+## DataBuffer
+
+현재 렌더링된 데이터와 대기 중인 데이터를 관리합니다.
+
+### createDataBuffer
+
+```typescript
+function createDataBuffer(options?: CreateDataBufferOptions): DataBuffer
+```
+
+**옵션:**
+
+```typescript
+interface CreateDataBufferOptions {
+  initialData?: DataPoint[];  // 초기 데이터
+  maxPoints?: number;         // 최대 포인트 수 (기본값: 무제한)
+}
+```
+
+**반환값: DataBuffer**
+
+```typescript
+interface DataBuffer {
+  getCurrent(): readonly DataPoint[];       // 현재 렌더링된 데이터
+  getPending(): readonly DataPoint[];       // 대기 중인 데이터
+  addPoints(points: DataPoint[]): void;     // 데이터 추가
+  flush(): readonly DataPoint[];            // 대기 데이터를 현재로 이동
+  clear(): void;                            // 버퍼 초기화
+  getTotalCount(): number;                  // 총 데이터 수
+  setMaxPoints(max: number | undefined): void;  // 최대 포인트 설정
+  getState(): DataBufferState;              // 상태 스냅샷
+}
+```
+
+**예제:**
+
+```javascript
+const buffer = createDataBuffer({ maxPoints: 1000 });
+
+// 데이터 추가 (pending에 추가됨)
+buffer.addPoints([{ x: 1, y: 100 }]);
+buffer.addPoints([{ x: 2, y: 200 }]);
+
+console.log(buffer.getPending().length); // 2
+console.log(buffer.getCurrent().length); // 0
+
+// 대기 데이터를 현재로 플러시
+const flushed = buffer.flush();
+console.log(flushed.length); // 2
+console.log(buffer.getCurrent().length); // 2
+console.log(buffer.getPending().length); // 0
+
+// maxPoints 초과 시 오래된 데이터 자동 제거
+buffer.setMaxPoints(100);
+```
+
+---
+
+## RenderQueue
+
+렌더링할 데이터 포인트의 대기열을 관리합니다.
+
+### createRenderQueue
+
+```typescript
+function createRenderQueue(options?: CreateRenderQueueOptions): RenderQueue
+```
+
+**옵션:**
+
+```typescript
+interface CreateRenderQueueOptions {
+  maxSize?: number;  // 큐 최대 크기 (기본값: 무제한)
+}
+```
+
+**반환값: RenderQueue**
+
+```typescript
+interface RenderQueue {
+  enqueue(points: DataPoint[]): void;     // 큐에 추가
+  dequeueAll(): readonly DataPoint[];     // 모든 데이터 추출 (큐 비움)
+  isEmpty(): boolean;                      // 빈 상태 확인
+  getSize(): number;                       // 현재 크기
+  clear(): void;                           // 큐 초기화
+  getState(): RenderQueueState;            // 상태 스냅샷
+}
+```
+
+**예제:**
+
+```javascript
+const queue = createRenderQueue({ maxSize: 500 });
+
+// 데이터 추가
+queue.enqueue([{ x: 1, y: 100 }]);
+queue.enqueue([{ x: 2, y: 200 }, { x: 3, y: 300 }]);
+
+console.log(queue.getSize()); // 3
+console.log(queue.isEmpty()); // false
+
+// 모든 데이터 추출 (큐 비움)
+const items = queue.dequeueAll();
+console.log(items.length); // 3
+console.log(queue.isEmpty()); // true
+```
+
+---
+
+## FrameScheduler
+
+requestAnimationFrame 기반으로 데이터를 배치하여 다음 프레임에 일괄 렌더링합니다.
+
+### createFrameScheduler
+
+```typescript
+function createFrameScheduler(options: CreateFrameSchedulerOptions): FrameScheduler
+```
+
+**옵션:**
+
+```typescript
+interface CreateFrameSchedulerOptions {
+  onRender: (points: DataPoint[]) => void;  // 렌더링 콜백 (필수)
+  onError?: (error: Error) => void;         // 에러 콜백 (선택)
+}
+```
+
+**반환값: FrameScheduler**
+
+```typescript
+interface FrameScheduler {
+  start(): void;                           // 스케줄러 시작
+  stop(): void;                            // 스케줄러 정지
+  pause(): void;                           // 일시정지
+  resume(): void;                          // 재개
+  scheduleRender(points: DataPoint[]): void;  // 렌더링 예약
+  getStatus(): FrameSchedulerState;        // 상태 조회
+}
+```
+
+**상태:**
+
+```typescript
+interface FrameSchedulerState {
+  scheduledFrameId: number | undefined;  // 예약된 프레임 ID
+  isActive: boolean;                     // 활성화 상태
+  isPaused: boolean;                     // 일시정지 상태
+  frameCount: number;                    // 처리된 프레임 수
+  lastFrameTime: number | undefined;     // 마지막 프레임 시간 (ms)
+  averageFrameTime: number;              // 평균 프레임 시간 (ms)
+}
+```
+
+**예제:**
+
+```javascript
+const scheduler = createFrameScheduler({
+  onRender: (points) => {
+    console.log(`렌더링: ${points.length}개 포인트`);
+    // 실제 Canvas 렌더링 로직
+  },
+  onError: (error) => {
+    console.error('렌더링 에러:', error);
+  }
+});
+
+// 스케줄러 시작
+scheduler.start();
+
+// 데이터 예약 (다음 프레임에 일괄 렌더링)
+scheduler.scheduleRender([{ x: 1, y: 100 }]);
+scheduler.scheduleRender([{ x: 2, y: 200 }]);
+// → 다음 프레임에 2개 포인트가 한 번에 렌더링됨
+
+// 일시정지/재개
+scheduler.pause();
+// ... 데이터는 버퍼에 쌓이지만 렌더링되지 않음
+scheduler.resume();
+
+// 성능 모니터링
+const status = scheduler.getStatus();
+console.log(`평균 프레임 시간: ${status.averageFrameTime}ms`);
+
+// 정리
+scheduler.stop();
+```
+
+---
+
+## DeltaCalculator
+
+두 데이터 상태 간의 변경분을 계산합니다.
+
+### calculateDelta
+
+```typescript
+function calculateDelta(
+  current: DataPoint[],
+  next: DataPoint[],
+  options?: CalculateDeltaOptions
+): DeltaResult
+```
+
+**옵션:**
+
+```typescript
+interface CalculateDeltaOptions {
+  skipPrependCheck?: boolean;  // prepend 체크 스킵 (성능 최적화)
+}
+```
+
+**반환값: DeltaResult**
+
+```typescript
+type DeltaResult =
+  | { type: 'append'; newPoints: DataPoint[] }   // 끝에 추가
+  | { type: 'prepend'; newPoints: DataPoint[] }  // 앞에 추가
+  | { type: 'replace'; points: DataPoint[] }     // 전체 교체
+  | { type: 'none' };                            // 변경 없음
+```
+
+**예제:**
+
+```javascript
+// append 케이스 (가장 일반적)
+const current = [{ x: 1, y: 10 }, { x: 2, y: 20 }];
+const next = [{ x: 1, y: 10 }, { x: 2, y: 20 }, { x: 3, y: 30 }];
+
+const delta = calculateDelta(current, next);
+// { type: 'append', newPoints: [{ x: 3, y: 30 }] }
+
+// prepend 케이스
+const delta2 = calculateDelta(
+  [{ x: 2, y: 20 }],
+  [{ x: 1, y: 10 }, { x: 2, y: 20 }]
+);
+// { type: 'prepend', newPoints: [{ x: 1, y: 10 }] }
+
+// 변경 없음
+const delta3 = calculateDelta(current, current);
+// { type: 'none' }
+
+// 전체 교체 (복잡한 변경)
+const delta4 = calculateDelta(
+  [{ x: 1, y: 10 }],
+  [{ x: 2, y: 20 }]
+);
+// { type: 'replace', points: [{ x: 2, y: 20 }] }
+```
+
+### createDeltaCalculator
+
+상태를 유지하는 DeltaCalculator 인스턴스를 생성합니다.
+
+```typescript
+function createDeltaCalculator(options?: CreateDeltaCalculatorOptions): DeltaCalculator
+```
+
+**옵션:**
+
+```typescript
+interface CreateDeltaCalculatorOptions {
+  initialData?: DataPoint[];    // 초기 데이터
+  skipPrependCheck?: boolean;   // prepend 체크 스킵
+}
+```
+
+**반환값: DeltaCalculator**
+
+```typescript
+interface DeltaCalculator {
+  calculate(nextData: DataPoint[]): DeltaResult;  // 델타 계산
+  setCurrent(data: DataPoint[]): void;            // 현재 데이터 설정
+  getCurrent(): readonly DataPoint[];             // 현재 데이터 조회
+  clear(): void;                                  // 초기화
+}
+```
+
+**예제:**
+
+```javascript
+const calculator = createDeltaCalculator({
+  skipPrependCheck: true  // 실시간 append만 사용 시 성능 최적화
+});
+
+// 연속적인 델타 계산
+let delta;
+
+delta = calculator.calculate([{ x: 1, y: 10 }]);
+// { type: 'append', newPoints: [{ x: 1, y: 10 }] }
+
+delta = calculator.calculate([{ x: 1, y: 10 }, { x: 2, y: 20 }]);
+// { type: 'append', newPoints: [{ x: 2, y: 20 }] }
+
+delta = calculator.calculate([{ x: 1, y: 10 }, { x: 2, y: 20 }]);
+// { type: 'none' }
+```
+
+---
+
+## 커스텀 스트리밍 파이프라인
+
+저수준 API를 조합하여 커스텀 스트리밍 파이프라인을 구성할 수 있습니다.
+
+```javascript
+import {
+  createDataBuffer,
+  createRenderQueue,
+  createFrameScheduler,
+  calculateDelta
+} from '@xelstack/chart-core';
+
+function createCustomStreamingPipeline(canvas, options = {}) {
+  const { maxPoints = 1000 } = options;
+
+  // 컴포넌트 초기화
+  const buffer = createDataBuffer({ maxPoints });
+  const queue = createRenderQueue();
+  const ctx = canvas.getContext('2d');
+
+  // 프레임 스케줄러 설정
+  const scheduler = createFrameScheduler({
+    onRender: (points) => {
+      // 실제 Canvas 렌더링
+      points.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+  });
+
+  scheduler.start();
+
+  return {
+    // 데이터 추가
+    addPoints(points) {
+      buffer.addPoints(points);
+      const pending = buffer.flush();
+      scheduler.scheduleRender(pending);
+    },
+
+    // 일시정지/재개
+    pause: () => scheduler.pause(),
+    resume: () => scheduler.resume(),
+
+    // 상태 조회
+    getState() {
+      return {
+        buffer: buffer.getState(),
+        scheduler: scheduler.getStatus()
+      };
+    },
+
+    // 정리
+    destroy() {
+      scheduler.stop();
+      buffer.clear();
+      queue.clear();
+    }
+  };
+}
+
+// 사용
+const pipeline = createCustomStreamingPipeline(canvas, { maxPoints: 500 });
+
+// WebSocket 데이터 스트림
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  pipeline.addPoints([{ x: data.x, y: data.y }]);
+};
+```
+
+---
+
+## 성능 고려사항
+
+### 빠른 경로 (Fast Path)
+
+`calculateDelta`는 다음 순서로 빠른 경로를 시도합니다:
+
+1. **append 체크** (O(n) worst case, O(1) best case)
+   - 첫 번째 요소만 비교하여 빠르게 판단
+   - 실시간 데이터에서 가장 일반적인 패턴
+
+2. **prepend 체크** (skipPrependCheck로 비활성화 가능)
+   - 마지막 요소만 비교하여 빠르게 판단
+
+3. **전체 비교** (O(n))
+   - 완전히 동일한지 확인
+
+4. **replace 폴백**
+   - 위 케이스에 해당하지 않으면 전체 교체
+
+### 최적화 팁
+
+```javascript
+// 실시간 append만 사용하는 경우
+const calculator = createDeltaCalculator({
+  skipPrependCheck: true  // prepend 체크 스킵으로 성능 향상
+});
+
+// maxPoints 설정으로 메모리 제한
+const buffer = createDataBuffer({
+  maxPoints: 10000  // 오래된 데이터 자동 제거
+});
+```
+
+---
+
+## 다음 단계
+
+- [ChartHandle API](/api/chart-handle#증분-렌더링-incremental-rendering) - 고수준 증분 렌더링 API
+- [Types](/api/types#증분-렌더링-타입) - 관련 타입 정의
+- [Performance Guide](/guides/performance) - 성능 최적화 가이드
+- [Realtime Data Examples](/examples/advanced/realtime-data) - 실시간 데이터 예제

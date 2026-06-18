@@ -1,4 +1,4 @@
-import type { ChartState, ChartStatus } from '../types/index';
+import type { ChartState, ChartStatus } from '@chart/types/index';
 
 type ChartStateOverrides = Partial<Omit<ChartState, 'status' | 'pointCount'>>;
 

@@ -4,7 +4,19 @@
  * @module api/chart-handle
  */
 
-import type { Dataset, ChartConfig, Viewport, ChartState, DataPoint, AddPointsOptions } from '../types/index';
+import type {
+  Dataset,
+  ChartConfig,
+  Viewport,
+  ChartState,
+  DataPoint,
+  AddPointsOptions,
+} from '@chart/types/index';
+import type {
+  IncrementalRenderOptions,
+  IncrementalRenderState,
+  IncrementalAddPointsOptions,
+} from '@chart/types/incremental';
 
 /**
  * 차트 핸들 인터페이스
@@ -35,4 +47,44 @@ export interface ChartHandle {
   addPoints: (points: DataPoint[], options?: AddPointsOptions) => void;
   /** 리소스 정리 */
   destroy: () => void;
+
+  /**
+   * 데이터 포인트 추가 (증분 렌더링)
+   * 새 데이터만 렌더링하여 성능 최적화
+   * @param points 추가할 데이터 포인트
+   * @param options 추가 옵션
+   */
+  addPointsIncremental: (
+    points: readonly DataPoint[],
+    options?: IncrementalAddPointsOptions
+  ) => void;
+
+  /**
+   * 배치 업데이트 (델타 계산 후 증분 렌더링)
+   * currentData와 nextData를 비교하여 변경분만 렌더링
+   * @param nextData 다음 상태의 전체 데이터
+   */
+  updateDataIncremental: (nextData: readonly DataPoint[]) => void;
+
+  /**
+   * 증분 렌더링 상태 조회
+   * @returns 증분 렌더링 상태 객체
+   */
+  getIncrementalState: () => IncrementalRenderState;
+
+  /**
+   * 증분 렌더링 일시정지
+   */
+  pauseIncremental: () => void;
+
+  /**
+   * 증분 렌더링 재개
+   */
+  resumeIncremental: () => void;
+
+  /**
+   * 증분 렌더링 설정 변경
+   * @param options 변경할 설정
+   */
+  setIncrementalOptions: (options: Partial<IncrementalRenderOptions>) => void;
 }

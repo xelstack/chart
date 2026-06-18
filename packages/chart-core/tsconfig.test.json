@@ -1,9 +1,19 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@chart/api/*": ["src/api/*"],
+      "@chart/charts/*": ["src/charts/*"],
+      "@chart/effects/*": ["src/effects/*"],
+      "@chart/state/*": ["src/state/*"],
+      "@chart/streaming/*": ["src/streaming/*"],
+      "@chart/types/*": ["src/types/*"],
+      "@chart/utils/*": ["src/utils/*"],
+      "@chart/widget/*": ["src/widget/*"]
+    }
   },
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }
-

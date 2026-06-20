@@ -1,0 +1,13 @@
+# 2026-06-20 Skill Feedback
+
+## User Feedback
+
+사용자는 단순한 프로젝트 규칙 파일이 아니라, Hyper-Waterfall 방법론을 프로젝트에서 쉽게 운용하기 위한 스킬을 원했다.
+
+## Decision
+
+`docs/hyper-waterfall/skills/xel-chart-hyper-waterfall/SKILL.md`를 문서 게이트 나열 중심에서 운영 모드, 문서 선택 규칙, 템플릿 중심의 방법론 스킬로 개정한다.
+
+## Impact
+
+앞으로 Codex는 이 스킬을 통해 현재 상황에 맞는 문서 위치와 다음 행동을 판단해야 한다. 특히 사용자가 직접 코드를 치는 개발 방식에서는 `Human Coding Session` 모드를 기본으로 사용한다.

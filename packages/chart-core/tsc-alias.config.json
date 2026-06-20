@@ -1,5 +1,0 @@
-{
-  "verbose": false,
-  "resolveFullPaths": true,
-  "outDir": "./dist/types"
-}

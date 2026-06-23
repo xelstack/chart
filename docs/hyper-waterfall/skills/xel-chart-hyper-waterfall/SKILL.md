@@ -1,11 +1,11 @@
 ---
 name: xel-chart-hyper-waterfall
-description: Use when working in the xelstack chart repository on task selection, planning, implementation guidance, review, feedback capture, reports, technical notes, or troubleshooting with the project-local Hyper-Waterfall method.
+description: xelstack chart repository에서 프로젝트 로컬 Hyper-Waterfall 방식으로 작업 선택, 계획, 구현 안내, 리뷰, 피드백 기록, 보고서, 기술 기록, troubleshooting을 수행할 때 사용한다.
 ---
 
 # Xel Chart Hyper-Waterfall
 
-## What This Skill Does
+## 이 Skill이 하는 일
 
 이 스킬은 Hyper-Waterfall을 이 프로젝트에서 쉽게 쓰기 위한 조작 설명서다.
 
@@ -17,7 +17,7 @@ Codex는 이 스킬을 사용해 다음을 판단한다.
 - 언제 구현을 멈추고 승인/보고/피드백을 남겨야 하는가
 - 어떤 내용은 `feedback`, `tech`, `troubleshootings` 중 어디에 기록해야 하는가
 
-## Core Rule
+## 핵심 규칙
 
 코드는 결과물이고, 문서는 개발 흐름의 제어 장치다.
 
@@ -28,9 +28,9 @@ Codex는 이 스킬을 사용해 다음을 판단한다.
 - Codex는 diff, 에러, 테스트 결과를 리뷰한다.
 - Codex는 결정, 피드백, 실패 기록을 문서화한다.
 
-Codex may edit files directly only when the user explicitly asks it to.
+Codex는 사용자가 명시적으로 요청했을 때만 파일을 직접 편집할 수 있다.
 
-## Directory Map
+## 디렉터리 지도
 
 ```text
 docs/
@@ -46,324 +46,324 @@ docs/
     skills/               프로젝트 로컬 스킬
 ```
 
-## Operating Modes
+## 운영 모드
 
-### 1. Start Day
+### 1. 하루 시작
 
-Use when the user asks what to do next, where to begin, or how to continue.
+사용자가 다음에 무엇을 할지, 어디서 시작할지, 어떻게 이어갈지 물을 때 사용한다.
 
-Actions:
+행동:
 
-1. Read `docs/domain/*` if the task touches product direction.
-2. Read the latest files in `docs/hyper-waterfall/orders/`.
-3. Create or update `docs/hyper-waterfall/orders/YYYYMMDD.md`.
-4. Recommend exactly one next task.
+1. task가 제품 방향에 닿으면 `docs/domain/*`를 읽는다.
+2. `docs/hyper-waterfall/orders/`의 최신 파일을 읽는다.
+3. `docs/hyper-waterfall/orders/YYYYMMDD.md`를 만들거나 업데이트한다.
+4. 다음 task를 정확히 하나만 추천한다.
 
-Order template:
+작업 지시서 template:
 
 ```md
 # 오늘 할 일 - YYYY-MM-DD
 
-## Current Focus
+## 현재 초점
 
 - Milestone: M001
 - Task: task_m001_001
-- Goal:
-- Status: planned
+- 목표:
+- 상태: 계획됨
 
-## Queue
+## 대기열
 
-| Task | Title | Status | Next Gate |
-| --- | --- | --- | --- |
-| task_m001_001 |  | planned | execution plan approval |
+| Task          | 제목 | 상태   | 다음 게이트     |
+| ------------- | ---- | ------ | --------------- |
+| task_m001_001 |      | 계획됨 | 수행계획서 승인 |
 
-## Notes
+## 메모
 
 -
 ```
 
-### 2. Plan Task
+### 2. Task 계획
 
-Use when a task is chosen but implementation has not started.
+task가 선택되었지만 구현이 시작되지 않았을 때 사용한다.
 
-Create:
+생성:
 
 ```text
 docs/hyper-waterfall/plans/task_m001_001.md
 ```
 
-Execution plan template:
+수행계획서 template:
 
 ```md
 # task_m001_001 수행계획서
 
-## Goal
+## 목표
 
-## Scope
+## 범위
 
-## Non-Goals
+## 하지 않는 것
 
-## Domain Sources
+## 도메인 출처
 
-## Stages
+## 단계
 
 1.
 
-## Approval
+## 승인
 
-- Status: waiting
-- Approved by:
-- Date:
+- 상태: 대기
+- 승인자:
+- 날짜:
 ```
 
-Gate:
+게이트:
 
-- Wait for user approval before writing implementation details.
+- 구현 세부사항을 쓰기 전에 사용자 승인을 기다린다.
 
-### 3. Plan Implementation
+### 3. 구현 계획
 
-Use after the execution plan is approved.
+수행계획서가 승인된 뒤 사용한다.
 
-Create:
+생성:
 
 ```text
 docs/hyper-waterfall/plans/task_m001_001_impl.md
 ```
 
-Implementation plan template:
+구현계획서 template:
 
 ```md
 # task_m001_001 구현계획서
 
-## Goal
+## 목표
 
-## Files To Create
+## 생성할 파일
 
-## Files To Modify
+## 수정할 파일
 
-## Stage 1
+## 단계 1
 
-### Human Types
+### 사용자가 직접 작성
 
-### Codex Explains
+### Codex가 설명할 것
 
-### Verification
+### 검증
 
-## Stage 2
+## 단계 2
 
-### Human Types
+### 사용자가 직접 작성
 
-### Codex Explains
+### Codex가 설명할 것
 
-### Verification
+### 검증
 
-## Approval
+## 승인
 
-- Status: waiting
-- Approved by:
-- Date:
+- 상태: 대기
+- 승인자:
+- 날짜:
 ```
 
-Gate:
+게이트:
 
-- Wait for user approval before implementation.
+- 구현 전에 사용자 승인을 기다린다.
 
-### 4. Human Coding Session
+### 4. 사용자 직접 코딩 세션
 
-Use when the user wants to write code directly.
+사용자가 코드를 직접 작성하고 싶어 할 때 사용한다.
 
-Codex should answer in this shape:
+Codex는 다음 형태로 답한다.
 
 ```text
-1. Why this file exists
-2. What concept this code represents
-3. The smallest code block to type now
-4. What should fail or pass after typing it
-5. What output/diff to show next
+1. 이 파일이 존재하는 이유
+2. 이 코드가 표현하는 개념
+3. 지금 입력할 가장 작은 코드 블록
+4. 입력 후 실패하거나 통과해야 하는 것
+5. 다음에 보여줄 output/diff
 ```
 
-Do not jump ahead. Prefer one file, one type, one function, or one test at a time.
+앞서가지 않는다. 한 번에 파일 하나, 타입 하나, 함수 하나, 테스트 하나를 선호한다.
 
-### 5. Stage Report
+### 5. 단계 완료보고
 
-Use after a stage is implemented or reviewed.
+stage가 구현되거나 리뷰된 뒤 사용한다.
 
-Create:
+생성:
 
 ```text
 docs/hyper-waterfall/working/task_m001_001_stage1.md
 ```
 
-Stage report template:
+단계 완료보고 template:
 
 ```md
-# task_m001_001 Stage 1 완료보고
+# task_m001_001 단계 1 완료보고
 
-## Planned
+## 계획
 
-## Done
+## 완료
 
-## Verification
+## 검증
 
-## Differences From Plan
+## 계획 대비 차이
 
-## Human Feedback
+## 사용자 피드백
 
-## Next Gate
+## 다음 게이트
 
-- Status: waiting
+- 상태: 대기
 ```
 
-Gate:
+게이트:
 
-- Wait for user approval before the next stage.
+- 다음 stage로 넘어가기 전에 사용자 승인을 기다린다.
 
-### 6. Capture Feedback
+### 6. 피드백 기록
 
-Use when the user corrects Codex, changes direction, or adds domain judgment.
+사용자가 Codex를 교정하거나, 방향을 바꾸거나, 도메인 판단을 추가할 때 사용한다.
 
-Create or update:
+생성 또는 업데이트:
 
 ```text
 docs/hyper-waterfall/feedback/task_m001_001_feedback.md
 ```
 
-Feedback template:
+피드백 template:
 
 ```md
-# task_m001_001 Feedback
+# task_m001_001 피드백
 
 ## YYYY-MM-DD
 
-### User Feedback
+### 사용자 피드백
 
-### Decision
+### 결정
 
-### Impact
+### 영향
 ```
 
-Rule:
+규칙:
 
-- Feedback is not a summary. Preserve the user's correction and why it changed the project.
+- 피드백은 요약이 아니다. 사용자의 교정과 그것이 프로젝트를 바꾼 이유를 보존한다.
 
-### 7. Capture Tech
+### 7. 기술 기록
 
-Use when a durable technical fact, benchmark result, API constraint, browser behavior, or algorithm decision is discovered.
+오래 보존해야 하는 기술 사실, benchmark 결과, API 제약, browser behavior, algorithm decision을 발견했을 때 사용한다.
 
-Create:
+생성:
 
 ```text
 docs/hyper-waterfall/tech/task_m001_001_topic.md
 ```
 
-Tech note template:
+기술 기록 template:
 
 ```md
-# Topic
+# 주제
 
-## Finding
+## 발견
 
-## Evidence
+## 근거
 
-## Decision
+## 결정
 
-## Revisit When
+## 다시 볼 시점
 ```
 
-### 8. Troubleshoot
+### 8. Troubleshooting
 
-Use when a test fails, a tool breaks, performance regresses, or the cause is unclear.
+test가 실패하거나, tool이 깨지거나, 성능이 퇴보하거나, 원인이 불명확할 때 사용한다.
 
-Create:
+생성:
 
 ```text
 docs/hyper-waterfall/troubleshootings/task_m001_001_issue.md
 ```
 
-Troubleshooting template:
+Troubleshooting 템플릿:
 
 ```md
-# Issue
+# 이슈
 
-## Symptom
+## 증상
 
-## Expected
+## 기대
 
-## Investigation
+## 조사
 
-## Root Cause
+## 근본 원인
 
-## Fix
+## 수정
 
-## Prevention
+## 예방
 ```
 
-### 9. Close Task
+### 9. Task 종료
 
-Use when all planned stages are done.
+계획된 모든 stage가 끝났을 때 사용한다.
 
-Create:
+생성:
 
 ```text
 docs/hyper-waterfall/reports/task_m001_001_report.md
 ```
 
-Final report template:
+최종보고서 template:
 
 ```md
 # task_m001_001 최종보고서
 
-## Goal
+## 목표
 
-## Result
+## 결과
 
-## Verification
+## 검증
 
-## Plan vs Actual
+## 계획 대비 실제
 
-## Remaining Work
+## 남은 작업
 
-## Lessons
+## 배운 점
 
-## Approval
+## 승인
 
-- Status: waiting
+- 상태: 대기
 ```
 
-## Document Selection Rules
+## 문서 선택 규칙
 
-| Situation | Write To |
-| --- | --- |
-| "오늘 뭐 하지?" | `orders/` |
-| "어떻게 할까?" | `plans/task_*.md` |
-| "구체적으로 뭘 칠까?" | `plans/task_*_impl.md` |
-| "여기까지 했다" | `working/` |
-| "그 판단 틀렸어" | `feedback/` |
-| "이 기술 사실은 기억해야 해" | `tech/` |
-| "왜 실패하지?" | `troubleshootings/` |
-| "끝났다" | `reports/` |
+| 상황                         | 기록 위치              |
+| ---------------------------- | ---------------------- |
+| "오늘 뭐 하지?"              | `orders/`              |
+| "어떻게 할까?"               | `plans/task_*.md`      |
+| "구체적으로 뭘 칠까?"        | `plans/task_*_impl.md` |
+| "여기까지 했다"              | `working/`             |
+| "그 판단 틀렸어"             | `feedback/`            |
+| "이 기술 사실은 기억해야 해" | `tech/`                |
+| "왜 실패하지?"               | `troubleshootings/`    |
+| "끝났다"                     | `reports/`             |
 
-## Approval Gates
+## 승인 게이트
 
-Do not cross these gates silently:
+다음 게이트를 조용히 넘지 않는다.
 
-1. execution plan approval
-2. implementation plan approval
-3. stage report approval
-4. final report approval
+1. 수행계획서 승인
+2. 구현계획서 승인
+3. 단계 완료보고 승인
+4. 최종보고서 승인
 
-If the user says to proceed, record the approval in the relevant document.
+사용자가 진행하라고 말하면 관련 문서에 승인을 기록한다.
 
-## Current Project Goal
+## 현재 프로젝트 목표
 
-Build a chart library that is as easy to use as Chart.js while aggressively optimized for realtime line/area time-series charts suitable for APM-style workloads.
+Chart.js처럼 사용하기 쉬우면서도 APM-style workload에 적합한 realtime line/area time-series chart에 대해 공격적으로 최적화된 chart library를 만든다.
 
-## Current Domain Constraints
+## 현재 도메인 제약
 
-- v1 focuses on realtime `line` and `area`.
-- Public API should feel Chart.js-like, not Chart.js-compatible.
-- Internal model uses series-local columnar buffers.
-- `append` is the realtime canonical path.
-- Typed-array append is the hard performance path.
-- Rendering is scheduled through `requestAnimationFrame`.
-- Downsampling defaults to automatic M4 unless benchmark evidence changes the policy.
+- v1은 realtime `line`과 `area`에 집중한다.
+- Public API는 Chart.js-compatible이 아니라 Chart.js-like 느낌이어야 한다.
+- Internal model은 series-local columnar buffer를 사용한다.
+- `append`는 realtime canonical path다.
+- Typed-array append는 hard performance path다.
+- Rendering은 `requestAnimationFrame`으로 schedule된다.
+- Downsampling은 benchmark evidence가 policy를 바꾸기 전까지 automatic M4를 기본으로 한다.

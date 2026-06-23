@@ -1,28 +1,28 @@
-# Prettier Config File Format
+# Prettier Config 파일 형식
 
-## Finding
+## 발견
 
-Prettier supports JSON, JavaScript ESM, JavaScript CommonJS, TypeScript, YAML, and TOML config files.
+Prettier는 JSON, JavaScript ESM, JavaScript CommonJS, TypeScript, YAML, TOML config file을 지원한다.
 
-For this repository, `prettier.config.js` is the best initial fit because the root `package.json` uses `"type": "module"`.
+이 repository에서는 root `package.json`이 `"type": "module"`을 사용하므로 `prettier.config.js`가 초기 선택으로 가장 적합하다.
 
-## Evidence
+## 근거
 
-- Prettier official documentation lists `prettier.config.js` and `prettier.config.cjs` as supported config file names.
-- Prettier official documentation says `.js` config uses `export default` or `module.exports` depending on the `type` value in `package.json`.
-- TanStack Query uses root `"type": "module"` and `prettier.config.js` with `export default`.
-- Vue Core uses `.prettierrc`.
-- Rollup uses `.prettierrc.json`.
+- Prettier 공식 문서는 `prettier.config.js`와 `prettier.config.cjs`를 지원 config file name으로 나열한다.
+- Prettier 공식 문서는 `.js` config가 `package.json`의 `type` 값에 따라 `export default` 또는 `module.exports`를 사용한다고 설명한다.
+- TanStack Query는 root `"type": "module"`과 `export default`를 쓰는 `prettier.config.js`를 사용한다.
+- Vue Core는 `.prettierrc`를 사용한다.
+- Rollup은 `.prettierrc.json`을 사용한다.
 
-## Decision
+## 결정
 
-Use:
+다음을 사용한다.
 
 ```text
 prettier.config.js
 ```
 
-with:
+내용은 다음과 같다.
 
 ```js
 /** @type {import("prettier").Config} */
@@ -35,10 +35,10 @@ const config = {
 export default config;
 ```
 
-Do not use `prettier.config.cjs` unless a future tool requires CommonJS config loading.
+미래의 tool이 CommonJS config loading을 요구하지 않는 한 `prettier.config.cjs`는 사용하지 않는다.
 
-## Revisit When
+## 다시 볼 시점
 
-- Prettier config needs CommonJS-only plugin loading.
-- The root package stops using `"type": "module"`.
-- Tooling fails to load ESM Prettier config.
+- Prettier config에 CommonJS-only plugin loading이 필요해질 때.
+- root package가 `"type": "module"`을 더 이상 사용하지 않을 때.
+- tooling이 ESM Prettier config를 load하지 못할 때.

@@ -1,10 +1,10 @@
-# Domain Model: Realtime Line/Area Chart
+# 도메인 모델: 실시간 Line/Area 차트
 
-## Purpose
+## 목적
 
 이 문서는 구현자가 바로 TypeScript 타입과 테스트로 옮길 수 있는 v1 도메인 모델을 정의한다.
 
-## Public Types
+## Public 타입
 
 ```ts
 type ChartType = "line" | "area";
@@ -29,27 +29,29 @@ interface DatasetConfig {
 
 Chart.js-like 이름을 사용하지만, Chart.js drop-in replacement를 목표로 하지 않는다.
 
-## Realtime Options
+## Realtime 옵션
 
 초기 public API는 단순해야 한다.
 
 ```ts
-type RealtimeOptions = true | {
-  ordered?: boolean;
-};
+type RealtimeOptions =
+  | true
+  | {
+      ordered?: boolean;
+    };
 ```
 
-Default:
+기본값:
 
 ```ts
 {
-  ordered: true
+  ordered: true;
 }
 ```
 
 `viewWindow`, `maxPoints`, `maxBytes`, public diagnostics API는 v1 core domain의 확장 포인트로 남긴다. 기본 API에는 강제하지 않는다.
 
-## Input Values
+## 입력 값
 
 ```ts
 type TimeValue = number | Date;
@@ -73,7 +75,7 @@ type AppendInput =
   | ColumnarPointBatch;
 ```
 
-Rules:
+규칙:
 
 - `number` x는 epoch milliseconds다.
 - `Date` x는 `getTime()`으로 epoch milliseconds로 변환한다.
@@ -109,7 +111,7 @@ interface SeriesBuffer {
 }
 ```
 
-Design decisions:
+설계 결정:
 
 - 각 series는 자기 x/y columns를 가진다.
 - 모든 series가 공통 x 배열을 공유하지 않는다.
@@ -156,9 +158,9 @@ interface VisibleSeriesSlice {
 }
 ```
 
-`start` is inclusive. `end` is exclusive.
+`start`는 inclusive이고 `end`는 exclusive다.
 
-## Downsample Policy
+## Downsample 정책
 
 ```ts
 type DownsampleMode = "auto" | "off";
@@ -171,7 +173,7 @@ interface DownsamplePolicy {
 }
 ```
 
-Default internal candidate:
+기본 내부 후보:
 
 ```ts
 {
@@ -207,7 +209,7 @@ interface RenderSegment {
 
 Segments는 gap 때문에 끊어진 line/area path를 표현한다.
 
-## Commands
+## 명령
 
 ```ts
 type ChartCommand =
@@ -222,7 +224,7 @@ type ChartCommand =
 
 Public mutable methods는 내부 command로 변환된다.
 
-## Events
+## 이벤트
 
 ```ts
 type ChartEvent =
@@ -237,4 +239,4 @@ type ChartEvent =
   | SeriesVisibilityChanged;
 ```
 
-Events are internal in v1. They are not part of the public API.
+이벤트는 v1에서 내부 전용이다. public API의 일부가 아니다.

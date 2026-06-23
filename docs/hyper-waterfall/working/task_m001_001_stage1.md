@@ -1,6 +1,6 @@
-# task_m001_001 Stage 1 완료보고
+# task_m001_001 단계 1 완료보고
 
-## Planned
+## 계획
 
 승인된 구현계획서 기준으로 다음을 만들기로 했다.
 
@@ -13,7 +13,7 @@
 - 첫 public domain type entry
 - colocated domain type contract test
 
-## Done
+## 완료
 
 작성된 파일:
 
@@ -42,7 +42,7 @@
 - `docs/hyper-waterfall/tech/task_m001_001_prettier-config-format.md`
 - `docs/hyper-waterfall/tech/task_m001_001_type_test_strategy.md`
 
-## Verification
+## 검증
 
 실행 결과:
 
@@ -83,14 +83,14 @@ Test Files  1 passed (1)
 Tests       2 passed (2)
 ```
 
-## Differences From Plan
+## 계획 대비 차이
 
 - `.gitignore`가 추가되었다. `pnpm install` 이후 `node_modules/`가 untracked로 잡히는 것을 막기 위해 필요했다.
 - Prettier config는 `.prettierrc.json` 대신 `prettier.config.js`를 사용하기로 바뀌었다. Root package가 `"type": "module"`이므로 ESM config가 자연스럽다.
 - Unit/domain test는 `packages/chart/tests/`가 아니라 source 옆 colocated test로 두기로 바뀌었다.
 - `public-types.test.ts`는 runtime unit test가 아니라 type contract test로 정의했다.
 
-## Human Feedback
+## 사용자 피드백
 
 - Root package name은 `@xelstack/chart-workspace`로 정했다.
 - Package manager는 `pnpm`을 사용한다.
@@ -102,9 +102,9 @@ Tests       2 passed (2)
 - Domain unit tests는 source 옆에 colocate한다.
 - Type-only module test는 runtime assertion보다 type contract test로 다룬다.
 
-## Next Gate
+## 다음 게이트
 
-- Status: approved
-- Gate: stage report approval
-- Approved by: user
-- Date: 2026-06-23
+- 상태: 승인됨
+- 게이트: 단계 완료보고 승인
+- 승인자: user
+- 날짜: 2026-06-23

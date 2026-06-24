@@ -1,15 +1,15 @@
 import type {
-  ChartConfig,
-  ChartType,
-  DatasetConfig,
-} from "@/domain/public-types";
-import type {
   ConfigResult,
   ConfigValidationIssue,
   NormalizedChartConfig,
   NormalizedDatasetConfig,
   NormalizedRealtimeOptions,
 } from "@/domain/internal-types";
+import type {
+  ChartConfig,
+  ChartType,
+  DatasetConfig,
+} from "@/domain/public-types";
 
 const normalizeRealtimeOptions = (
   realtime: ChartConfig["realtime"],

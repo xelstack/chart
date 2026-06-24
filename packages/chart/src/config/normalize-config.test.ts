@@ -1,7 +1,7 @@
-import { it, expect, describe } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import type { ChartConfig } from "@/domain/public-types";
 import { normalizeConfig } from "@/config/normalize-config";
+import type { ChartConfig } from "@/domain/public-types";
 
 describe("normalizeConfig", () => {
   it("normalizes a minimal realtime line chart config", () => {

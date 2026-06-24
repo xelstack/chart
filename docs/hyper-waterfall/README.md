@@ -15,8 +15,9 @@ docs/hyper-waterfall/
   feedback/         사람의 리뷰, 교정, 도메인 피드백.
   tech/             기술 조사와 결정.
   troubleshootings/ 실패 분석과 복구 기록.
-  skills/           프로젝트 로컬 agent skill.
 ```
+
+프로젝트 로컬 agent skill은 `.agents/skills/` 아래에 둔다.
 
 ## 게이트 규칙
 

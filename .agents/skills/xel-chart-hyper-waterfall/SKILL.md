@@ -43,7 +43,9 @@ docs/
     feedback/             사용자의 교정과 판단
     tech/                 기술 조사와 결정
     troubleshootings/     실패 원인과 해결 과정
-    skills/               프로젝트 로컬 스킬
+
+.agents/
+  skills/                 프로젝트 로컬 agent skill
 ```
 
 ## 운영 모드

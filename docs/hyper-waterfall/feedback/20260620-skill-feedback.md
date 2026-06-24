@@ -6,7 +6,7 @@
 
 ## 결정
 
-`docs/hyper-waterfall/skills/xel-chart-hyper-waterfall/SKILL.md`를 문서 게이트 나열 중심에서 운영 모드, 문서 선택 규칙, 템플릿 중심의 방법론 스킬로 개정한다.
+`.agents/skills/xel-chart-hyper-waterfall/SKILL.md`를 문서 게이트 나열 중심에서 운영 모드, 문서 선택 규칙, 템플릿 중심의 방법론 스킬로 개정한다.
 
 ## 영향
 

@@ -20,8 +20,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint .",
-    "format:check": "prettier . --check",
-    "build": "tsup src/index.ts --format esm,cjs --dts"
+    "format:check": "prettier . --check --ignore-path ../../.prettierignore",
+    "build": "tsdown"
   },
   "dependencies": {},
   "devDependencies": {}

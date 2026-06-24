@@ -4,6 +4,7 @@ import type {
   AppendInput,
   ChartConfig,
   ColumnarPointBatch,
+  InitialDataInput,
   PointObject,
   PointTuple,
 } from "./public-types";
@@ -17,6 +18,16 @@ describe("public-types", () => {
     expectTypeOf<
       readonly [{ x: string; y: number }]
     >().not.toExtend<AppendInput>();
+  });
+
+  it("models initial data input tiers", () => {
+    expectTypeOf<readonly PointObject[]>().toExtend<InitialDataInput>();
+    expectTypeOf<readonly PointTuple[]>().toExtend<InitialDataInput>();
+    expectTypeOf<ColumnarPointBatch>().toExtend<InitialDataInput>();
+
+    expectTypeOf<
+      readonly [{ x: string; y: number }]
+    >().not.toExtend<InitialDataInput>();
   });
 
   it("models a minimal realtime line chart config", () => {

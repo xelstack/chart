@@ -120,7 +120,7 @@ type YValue = number | null;
 
 ## 실시간 계약
 
-기본값:
+명시적 realtime 사용:
 
 ```ts
 realtime: true;
@@ -138,9 +138,12 @@ realtime: true;
 
 ```ts
 {
+  enabled: false,
   ordered: true;
 }
 ```
+
+`realtime`을 생략하면 realtime append/scheduler path는 비활성화된다. 사용자가 `realtime: true` 또는 `realtime: { ordered }`를 명시한 경우에만 realtime path를 활성화한다.
 
 가장 빠른 경로를 위해 같은 series에는 non-decreasing x 값이 들어와야 한다.
 

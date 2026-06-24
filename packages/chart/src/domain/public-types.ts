@@ -26,10 +26,12 @@ export type RealtimeOptions =
       ordered?: boolean;
     };
 
+export type InitialDataInput = AppendInput;
+
 export interface DatasetConfig {
   id?: string;
   label?: string;
-  data: AppendInput;
+  data: InitialDataInput;
 }
 
 export interface ChartData {

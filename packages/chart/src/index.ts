@@ -5,6 +5,7 @@ export type {
   ChartType,
   ColumnarPointBatch,
   DatasetConfig,
+  InitialDataInput,
   PointObject,
   PointTuple,
   RealtimeOptions,
